@@ -5,6 +5,8 @@
 #define UNIT_SIZE 2
 #define STRIPE_ROWS 4
 
+uint16_t SNAKES[128*4];
+
 void insert_ubit(uint8_t pos, uint8_t new_bit, uint16_t * ch){
     new_bit &= 0x01;
     uint16_t mask;
