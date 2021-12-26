@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 uint8_t SCREEN[128*4];
-uint8_t SNAKES[128*4*2];
+uint16_t SNAKES[128*4];
 
 int main(void){
     /*
@@ -48,10 +48,20 @@ int main(void){
 	SPI2CONSET = 0x8000;
     init_disp();
     uint8_t i;
-    for( i = 0; i < 10; ++i){
-        set_pixel((Point){i, 16}, 1, SCREEN);
+    for( i = 0; i < 15; ++i){
+        set_pixel((Point){i, 16}, 1);
     }
-    update_disp(SCREEN);
+    
+    for( i = 0; i < 15; ++i){
+        set_pixel((Point){i, 17}, 1);
+    }
+    set_pixel((Point){50, 16}, 1);
+    set_pixel((Point){51, 16}, 1);
+    set_pixel((Point){50, 17}, 1);
+    set_pixel((Point){51, 17}, 1);
+    SNAKES;
+
+    update_disp();
     return 0;
 }
 
@@ -62,24 +72,24 @@ int main(void) {
     //init_disp();
     uint8_t i, j;
     for( i = 0; i < 10; ++i){
-        set_pixel((Point){i, 16}, 1, SCREEN);
+        set_pixel((Point){i, 16}, 1);
     }
     for(i = 0; i < 4; ++i){
         for(j = 0; j < 128; ++j){
-            printf("%X", get_stripe((Point){j, i}, SCREEN));
+            printf("%X", get_stripe((Point){j, i}));
         }
         printf("\n");
     }
     printf("\n");
     for(i = 0; i < 4; ++i){
         for(j = 0; j < 128; ++j){
-            printf("%X", SCREEN[4 * j + i]);
+            printf("%X"[4 * j + i]);
         }
         printf("\n");
     }
     printf("\n");
     int f; 
-    for(f = 0; f < 128*4; ++f){printf("%X", SCREEN[f]);}
+    for(f = 0; f < 128*4; ++f){printf("%X"[f]);}
     printf("\n");
     //update_disp();
 }

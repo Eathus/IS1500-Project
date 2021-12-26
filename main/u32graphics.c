@@ -16,7 +16,7 @@
 #define DISPLAY_TURN_OFF_VDD (PORTFSET = 0x40)
 #define DISPLAY_TURN_OFF_VBAT (PORTFSET = 0x20)
 
-//matrix for screen in column major; stored as a unsigned char array
+//matrix for SCREEN in column major; stored as a unsigned char array
 
 void insert_bit(uint8_t pos, uint8_t new_bit, uint8_t * ch){
     new_bit &= 0x01;
@@ -40,22 +40,22 @@ int get_stripe_index(Point coordinates){
 int get_pixel_index(uint8_t y){
     return (y % 32) % STRIPE_BIT_LEN;
 }
-uint8_t get_stripe(Point coordinates, const uint8_t *screen){
-    return screen[get_stripe_index(coordinates)];
+uint8_t get_stripe(Point coordinates){
+    return SCREEN[get_stripe_index(coordinates)];
 }
 
-uint8_t get_pixel(Point coordinates, const uint8_t *screen){
-    uint8_t stripe = screen[pixel_to_stripe(coordinates)];
+uint8_t get_pixel(Point coordinates){
+    uint8_t stripe = SCREEN[pixel_to_stripe(coordinates)];
     return (stripe >> get_pixel_index(coordinates.y)) & 0x01;
 }
 
-void set_stripe(Point coordinates, uint8_t val, uint8_t *screen){
-    screen[get_stripe_index(coordinates)] = val;
+void set_stripe(Point coordinates, uint8_t val){
+    SCREEN[get_stripe_index(coordinates)] = val;
 }
 
-void set_pixel(Point coordinates, uint8_t val, uint8_t *screen){
+void set_pixel(Point coordinates, uint8_t val){
     uint8_t index = get_pixel_index(coordinates.y);
-    insert_bit(index, val, screen + pixel_to_stripe(coordinates));
+    insert_bit(index, val, SCREEN + pixel_to_stripe(coordinates));
 }
 
 void quicksleep(int cyc) {
@@ -100,7 +100,7 @@ void init_disp(void) {
 	spi_send_recv(0xAF);
 }
 
-void update_disp(uint8_t *screen){
+void update_disp(){
     uint8_t i, j;
     for(i = 0; i < STRIPE_ROWS; ++i){
         DISPLAY_CHANGE_TO_COMMAND_MODE;
@@ -114,6 +114,6 @@ void update_disp(uint8_t *screen){
         DISPLAY_CHANGE_TO_DATA_MODE;
 		
 		for(j = 0; j < STRIPE_COLS; ++j)
-			spi_send_recv(get_stripe((Point){j, i}, screen));
+			spi_send_recv(get_stripe((Point){j, i}));
     }
 }
