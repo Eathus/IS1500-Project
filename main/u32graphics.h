@@ -4,6 +4,8 @@
 
 extern uint8_t SCREEN[128*4];
 
+typedef enum pixel_status{Off, On} pixel_status;
+
 typedef struct Point {
     uint8_t x, y;
 } Point;

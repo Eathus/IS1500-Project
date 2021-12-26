@@ -1,8 +1,6 @@
 #include "u32graphics.h"
 #include <stdio.h>
 
-uint8_t SCREEN[128*4];
-uint16_t SNAKES[128*4];
 
 int main(void){
     /*
@@ -59,7 +57,6 @@ int main(void){
     set_pixel((Point){51, 16}, 1);
     set_pixel((Point){50, 17}, 1);
     set_pixel((Point){51, 17}, 1);
-    SNAKES;
 
     update_disp();
     return 0;
