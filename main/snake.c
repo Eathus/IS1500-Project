@@ -97,25 +97,89 @@ void change_dir(direction dir, Point *head){
     int i;
     switch (get_unit(*head))
     {
-    case Right: case Left:
+    case Right: 
         switch (dir)
         {
-        case Up: case Down:
-            for(i = 0; i < SEGMENT_SIZE; ++i) set_unit(head[i], dir);
+        case Up:
+            for(i = 0; i < SEGMENT_SIZE; ++i){
+                head[i].y = head[0].y;
+                head[i].x -= SEGMENT_SIZE - 1 - i;
+                set_unit(head[i], dir);
+            }
+            break;
+        case Down:
+            for(i = 0; i < SEGMENT_SIZE; ++i){
+                head[i].y = head[SEGMENT_SIZE - 1].y;
+                head[i].x -= SEGMENT_SIZE - 1 - i;
+                set_unit(head[i], dir);
+            }
             break;
         default:
             break;
         }
         break;
-    case Up: case Down:
+    case Left:
         switch (dir)
         {
-        case Right: case Left:
-            for(i = 0; i < SEGMENT_SIZE; ++i) set_unit(head[i], dir);
+        case Up:
+            for(i = 0; i < SEGMENT_SIZE; ++i){
+                head[i].y = head[0].y;
+                head[i].x += i;
+                set_unit(head[i], dir);
+            }
+            break;
+        case Down:
+            for(i = 0; i < SEGMENT_SIZE; ++i){
+                head[i].y = head[SEGMENT_SIZE - 1].y;
+                head[i].x += i;
+                set_unit(head[i], dir);
+            }
+            break;
+        default:
+            break;
+        }
+        break;
+    case Up: 
+        switch (dir)
+        {
+        case Right:
+            for(i = 0; i < SEGMENT_SIZE; ++i){
+                head[i].x = head[SEGMENT_SIZE - 1].x;
+                head[i].y += i;
+                set_unit(head[i], dir);
+            }
+            break;
+        case Left:
+            for(i = 0; i < SEGMENT_SIZE; ++i){
+                head[i].x = head[0].x;
+                head[i].y += i;
+                set_unit(head[i], dir);
+            }
+            break;
+        default:
+            break;
+        }
+        break;
+    case Down:
+        switch (dir)
+        {
+        case Right:
+            for(i = 0; i < SEGMENT_SIZE; ++i){
+                head[i].x = head[SEGMENT_SIZE - 1].x;
+                head[i].y -= SEGMENT_SIZE - 1 - i;
+                set_unit(head[i], dir);
+            }
+            break;
+        case Left:
+            for(i = 0; i < SEGMENT_SIZE; ++i){
+                head[i].x = head[0].x;
+                head[i].y -= SEGMENT_SIZE - 1 - i;
+                set_unit(head[i], dir);
+            }
             break;
         default:
             break;
         }
         break;
     }
-}
+}   
