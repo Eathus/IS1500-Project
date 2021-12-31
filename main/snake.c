@@ -5,6 +5,8 @@
 #define UNIT_SIZE 2
 #define STRIPE_ROWS 4
 
+Point FOOD_POS = {63, 15};
+
 uint16_t SNAKES[128*4];
 
 Point HEAD_PLAYER[SEGMENT_SIZE];
@@ -54,21 +56,21 @@ void set_unit(Point coordinates, uint8_t val){
     insert_bit(index + 1, val >> 1, SNAKES + unit_to_ustripe(coordinates));
 }
 
-void move_segment(Point* segment){
+void move_segment(Point* segment, uint8_t distance){
     int i;
     switch (get_unit(*segment))
     {
     case Right:
-        for(i = 0; i < SEGMENT_SIZE; ++i) segment[i].x++;
+        for(i = 0; i < SEGMENT_SIZE; ++i) segment[i].x = (segment[i].x + distance) % STRIPE_COLS;
         break;
     case Left:
-        for(i = 0; i < SEGMENT_SIZE; ++i) segment[i].x--;
+        for(i = 0; i < SEGMENT_SIZE; ++i) segment[i].x = (segment[i].x - distance) % STRIPE_COLS;
         break;
     case Up:
-        for(i = 0; i < SEGMENT_SIZE; ++i) segment[i].y--;
+        for(i = 0; i < SEGMENT_SIZE; ++i) segment[i].y = (segment[i].y - distance) % STRIPE_COLS;
         break;
     case Down:
-        for(i = 0; i < SEGMENT_SIZE; ++i) segment[i].y++;
+        for(i = 0; i < SEGMENT_SIZE; ++i) segment[i].y = (segment[i].y + distance) % STRIPE_COLS;
         break;
     }
 }
@@ -77,20 +79,65 @@ void toggle_segment(Point *segment, pixel_status stat){
     int i;
     for(i = 0; i < SEGMENT_SIZE; ++i) set_pixel(segment[i], stat);
 }
-
-void move_snake(Point *head, Point *tail){
+void update_segment(Point *segment, direction dir){
     int i;
-    direction dir = get_unit(*head);
-    move_segment(head);
-    for(i = 0; i < SEGMENT_SIZE; ++i) set_unit(head[i], dir);
-    toggle_segment(tail, Off);
-    toggle_segment(head, On);
-    move_segment(tail);
+    for(i = 0; i < SEGMENT_SIZE; ++i) set_unit(segment[i], dir);
 }
 
-void move_snakes(){
-    move_snake(HEAD_PLAYER, TAIL_PLAYER);
-    move_snake(HEAD_AI, TAIL_AI);
+uint8_t point_equal(const Point *left, const Point *right){
+    return left->x == right->x && left->y == right->y;
+}
+uint8_t eat_check(Point *head){
+    int i, j, k;
+    for(i = 0; i < SEGMENT_SIZE; ++i){
+        for(j = 0; j < SEGMENT_SIZE; ++j){
+            Point fpos = {FOOD_POS.x + j, FOOD_POS.y + i};
+            for(k = 0; k < SEGMENT_SIZE; ++k)
+                if(point_equal(&fpos, head + k)) return 1;
+        }
+    }   
+    return 0;
+}
+
+void player_eat(){
+    int i, j;
+    direction dir = get_unit(*HEAD_PLAYER);
+    for(i = 0; i < SEGMENT_SIZE; ++i){
+        move_segment(HEAD_PLAYER, 1);
+        update_segment(HEAD_PLAYER, dir);
+        toggle_segment(HEAD_PLAYER, On);
+    }
+    
+}
+void ai_eat(){
+    int i, j;
+    direction dir = get_unit(*HEAD_AI);
+    for(i = 0; i < SEGMENT_SIZE; ++i){
+        move_segment(HEAD_AI, 1);
+        update_segment(HEAD_AI, dir);
+        toggle_segment(HEAD_AI, On);
+    }
+    
+}
+
+uint8_t is_dead(Point *head){ 
+    int i;
+    for(i = 0; i < SEGMENT_SIZE; ++i){
+        if(get_pixel(head[i])) return 1;
+    }
+    return 0;
+}
+
+uint8_t move_snake(Point *head, Point *tail){
+    int i;
+    direction dir = get_unit(*head);
+    move_segment(head, 1);
+    update_segment(head, dir);
+    toggle_segment(tail, Off);
+    if(is_game_over(head)) return 1;
+    toggle_segment(head, On);
+    move_segment(tail, 1);
+    return 0;
 }
 
 void change_dir(direction dir, Point *head){
@@ -103,14 +150,14 @@ void change_dir(direction dir, Point *head){
         case Up:
             for(i = 0; i < SEGMENT_SIZE; ++i){
                 head[i].y = head[0].y;
-                head[i].x -= SEGMENT_SIZE - 1 - i;
+                head[i].x = head[i].x - SEGMENT_SIZE - 1 - i;
                 set_unit(head[i], dir);
             }
             break;
         case Down:
             for(i = 0; i < SEGMENT_SIZE; ++i){
                 head[i].y = head[SEGMENT_SIZE - 1].y;
-                head[i].x -= SEGMENT_SIZE - 1 - i;
+                head[i].x = head[i].x - SEGMENT_SIZE - 1 - i;
                 set_unit(head[i], dir);
             }
             break;
@@ -124,14 +171,14 @@ void change_dir(direction dir, Point *head){
         case Up:
             for(i = 0; i < SEGMENT_SIZE; ++i){
                 head[i].y = head[0].y;
-                head[i].x += i;
+                head[i].x = head[i].x + i;
                 set_unit(head[i], dir);
             }
             break;
         case Down:
             for(i = 0; i < SEGMENT_SIZE; ++i){
                 head[i].y = head[SEGMENT_SIZE - 1].y;
-                head[i].x += i;
+                head[i].x = head[i].x + i;
                 set_unit(head[i], dir);
             }
             break;
@@ -145,14 +192,14 @@ void change_dir(direction dir, Point *head){
         case Right:
             for(i = 0; i < SEGMENT_SIZE; ++i){
                 head[i].x = head[SEGMENT_SIZE - 1].x;
-                head[i].y += i;
+                head[i].y = head[i].y + i;
                 set_unit(head[i], dir);
             }
             break;
         case Left:
             for(i = 0; i < SEGMENT_SIZE; ++i){
                 head[i].x = head[0].x;
-                head[i].y += i;
+                head[i].y = head[i].y + i;
                 set_unit(head[i], dir);
             }
             break;
@@ -166,14 +213,14 @@ void change_dir(direction dir, Point *head){
         case Right:
             for(i = 0; i < SEGMENT_SIZE; ++i){
                 head[i].x = head[SEGMENT_SIZE - 1].x;
-                head[i].y -= SEGMENT_SIZE - 1 - i;
+                head[i].y = head[i].y - SEGMENT_SIZE - 1 - i;
                 set_unit(head[i], dir);
             }
             break;
         case Left:
             for(i = 0; i < SEGMENT_SIZE; ++i){
                 head[i].x = head[0].x;
-                head[i].y -= SEGMENT_SIZE - 1 - i;
+                head[i].y = head[i].y - SEGMENT_SIZE - 1 - i;
                 set_unit(head[i], dir);
             }
             break;
@@ -183,3 +230,88 @@ void change_dir(direction dir, Point *head){
         break;
     }
 }   
+
+
+int mytime = 0x5957;
+int counter = 0;
+char textstring[] = "text, more text, and even more text!";
+
+/* Interrupt Service Routine */
+void user_isr( void )
+{
+  return;
+}
+
+/* Lab-specific initialization goes here */
+void game_init( void )
+{
+  float periodms = 0.1;
+  int scale = 256;
+  int ck_freq = 80000000;
+
+  int period = ((periodms * ck_freq) / scale);
+
+  T2CONCLR = 0x8000;
+  T2CON = 0x70;
+  T2CONSET = 0x8000;
+  
+  PR2 = period;
+  TMR2 = 0;
+  /* Initialize Port E to that the 8 least significant bits are set
+  as output. Begin by declaring the volatile pointer trise. */
+  volatile int* trise = (volatile int*) 0xbf886100;
+  /* Modifying the 8 least significant bits*/
+  trise = *trise & 0xff00;
+  /* Initialize port D with the definitions in the pic32mx.h file. Bits
+  11 through 5 are set as input. */
+  TRISD = TRISD & 0x0fe0;
+  return;
+}
+
+/* This function is called repetitively from the main program */
+void game_loop( void )
+{
+  /* Declaring the volatile pointer porte*/
+  volatile int* porte = (volatile int*) 0xbf886110;
+  /* Initialize as 0 */
+  *porte = 0;
+  /* Variables to handle input */
+  int btn;
+  int sw;
+  while (1){
+    /* Active choice to have delay at the top of the loop for easier track keeping*/
+    //delay( 1000 );
+    int inter_flag = (IFS(0) & 0x100) >> 8;
+    btn = getbtns();
+    sw = getsw();
+    if(inter_flag){
+        IFS(0) = IFS(0) & (unsigned int)(~0x100); 
+        ++counter;
+    }   
+    if(counter == 10){
+        counter = 0;
+        /* Update input */
+
+        /* All of these are if statements since they can all be updated at once- not exclusive.
+        BTN4 - AND with corresponding bit */
+        if (btn & 0x4) {
+          /* Bitshift to first digit */
+          mytime = (sw << 12) | (mytime & 0x0fff);
+        }
+        /* BTN3 - AND with corresponding bit*/
+        if (btn & 0x2) {
+          /* Bitshift to second digit */
+          mytime = (sw << 8) | (mytime & 0xf0ff);
+        }
+        /* BTN2 - AND with corresponding bit*/
+        if (btn & 0x1) {
+          /* Bitshift to third digit */
+          mytime = (sw << 4) | (mytime & 0xff0f);
+        }
+        update_display();
+        tick( &mytime );
+        /* Increment the pointer as the count goes */
+        *porte+=1;
+    }
+  }
+}

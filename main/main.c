@@ -45,6 +45,8 @@ int main(void){
 	/* SPI2CON bit ON = 1; */
 	SPI2CONSET = 0x8000;
     init_disp();
+    
+
     uint8_t i;
     for( i = 0; i < 15; ++i){
         set_pixel((Point){i, 16}, 1);
