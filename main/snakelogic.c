@@ -57,9 +57,9 @@ void set_unit(Point coordinates, uint8_t val){
     insert_ubit(index + 1, val >> 1, SNAKES + unit_to_ustripe(coordinates));
 }
 
-void move_segment(Point* segment, uint8_t distance){
+void move_segment(direction dir, Point* segment, uint8_t distance){
     int i;
-    switch (get_unit(*segment))
+    switch (dir)
     {
     case Right:
         for(i = 0; i < SEGMENT_SIZE; ++i) segment[i].x = (segment[i].x + distance) % STRIPE_COLS;
@@ -74,6 +74,11 @@ void move_segment(Point* segment, uint8_t distance){
         for(i = 0; i < SEGMENT_SIZE; ++i) segment[i].y = (segment[i].y + distance) % ROWS;
         break;
     }
+}
+
+void set_segment(Point *left, Point *right){
+    int i;
+    for(i = 0; i < SEGMENT_SIZE; ++i) left[i] = right[i];
 }
 
 void toggle_segment(Point *segment, pixel_status stat){
@@ -104,7 +109,7 @@ void player_eat(){
     int i, j;
     direction dir = get_unit(*HEAD_PLAYER);
     for(i = 0; i < SEGMENT_SIZE; ++i){
-        move_segment(HEAD_PLAYER, 1);
+        move_segment(get_unit(*HEAD_PLAYER), HEAD_PLAYER, 1);
         update_segment(HEAD_PLAYER, dir);
         toggle_segment(HEAD_PLAYER, On);
     }
@@ -114,7 +119,7 @@ void ai_eat(){
     int i, j;
     direction dir = get_unit(*HEAD_AI);
     for(i = 0; i < SEGMENT_SIZE; ++i){
-        move_segment(HEAD_AI, 1);
+        move_segment(get_unit(*HEAD_AI), HEAD_AI, 1);
         update_segment(HEAD_AI, dir);
         toggle_segment(HEAD_AI, On);
     }
@@ -129,108 +134,119 @@ uint8_t is_dead(const Point *head){
     return 0;
 }
 
-uint8_t move_snake(Point *head, Point *tail){
+uint8_t rotate_segment(direction current_dir, direction rotation, Point *segment){
     int i;
-    direction dir = get_unit(*head);
-    move_segment(head, 1);
-    if(is_dead(head)) return 1;
-    update_segment(head, dir);
-    toggle_segment(tail, Off);
-    toggle_segment(head, On);
-    move_segment(tail, 1);
-    return 0;
-}
-
-void change_dir(direction dir, Point *head){
-    int i;
-    switch (get_unit(*head))
+    switch (current_dir)
     {
     case Right: 
-        switch (dir)
+        switch (rotation)
         {
         case Up:
             for(i = 0; i < SEGMENT_SIZE; ++i){
-                head[i].y = head[0].y;
-                head[i].x = head[i].x - SEGMENT_SIZE - 1 - i;
-                set_unit(head[i], dir);
+                segment[i].y = segment[SEGMENT_SIZE - 1].y;
+                segment[i].x = segment[i].x - SEGMENT_SIZE + 1 + i;
             }
             break;
         case Down:
             for(i = 0; i < SEGMENT_SIZE; ++i){
-                head[i].y = head[SEGMENT_SIZE - 1].y;
-                head[i].x = head[i].x - SEGMENT_SIZE - 1 - i;
-                set_unit(head[i], dir);
+                segment[i].y = segment[0].y;
+                segment[i].x = segment[i].x - SEGMENT_SIZE + 1 + i;
             }
             break;
         default:
-            break;
+            return 1;
         }
         break;
     case Left:
-        switch (dir)
+        switch (rotation)
         {
         case Up:
             for(i = 0; i < SEGMENT_SIZE; ++i){
-                head[i].y = head[0].y;
-                head[i].x = head[i].x + i;
-                set_unit(head[i], dir);
+                segment[i].y = segment[SEGMENT_SIZE - 1].y;
+                segment[i].x = segment[i].x + i;
             }
             break;
         case Down:
             for(i = 0; i < SEGMENT_SIZE; ++i){
-                head[i].y = head[SEGMENT_SIZE - 1].y;
-                head[i].x = head[i].x + i;
-                set_unit(head[i], dir);
+                segment[i].y = segment[0].y;
+                segment[i].x = segment[i].x + i;
             }
             break;
         default:
-            break;
+            return 1;
         }
         break;
     case Up: 
-        switch (dir)
+        switch (rotation)
         {
         case Right:
             for(i = 0; i < SEGMENT_SIZE; ++i){
-                head[i].x = head[SEGMENT_SIZE - 1].x;
-                head[i].y = head[i].y + i;
-                set_unit(head[i], dir);
+                segment[i].x = segment[0].x;
+                segment[i].y = segment[i].y + i;
             }
             break;
         case Left:
             for(i = 0; i < SEGMENT_SIZE; ++i){
-                head[i].x = head[0].x;
-                head[i].y = head[i].y + i;
-                set_unit(head[i], dir);
+                segment[i].x = segment[SEGMENT_SIZE - 1].x;
+                segment[i].y = segment[i].y + i;
             }
             break;
         default:
-            break;
+            return 1;
         }
         break;
     case Down:
-        switch (dir)
+        switch (rotation)
         {
         case Right:
             for(i = 0; i < SEGMENT_SIZE; ++i){
-                head[i].x = head[SEGMENT_SIZE - 1].x;
-                head[i].y = head[i].y - SEGMENT_SIZE - 1 - i;
-                set_unit(head[i], dir);
+                segment[i].x = segment[0].x;
+                segment[i].y = segment[i].y - SEGMENT_SIZE + 1 + i;
             }
             break;
         case Left:
             for(i = 0; i < SEGMENT_SIZE; ++i){
-                head[i].x = head[0].x;
-                head[i].y = head[i].y - SEGMENT_SIZE - 1 - i;
-                set_unit(head[i], dir);
+                segment[i].x = segment[SEGMENT_SIZE - 1].x;
+                segment[i].y = segment[i].y - SEGMENT_SIZE + 1 + i;
             }
             break;
         default:
-            break;
+            return 1;
         }
         break;
     }
+    return 0;
 }   
+
+void change_dir(direction dir, Point *head){
+    int i;
+    if(rotate_segment(get_unit(*head), dir, head)) return;  
+    for(i = 1; i < SEGMENT_SIZE; ++i){
+        update_segment(head, dir);
+        move_segment(get_unit(*head), head, 1);
+    } 
+    update_segment(head, dir);
+}   
+
+uint8_t move_snake(Point *head, Point *tail){
+    int i;
+    direction head_dir = get_unit(*head);
+    move_segment(get_unit(*head), head, 1);
+    toggle_segment(tail, Off);
+    if(is_dead(head)) return 1;
+    toggle_segment(head, On);
+    update_segment(head, head_dir);
+    
+    uint8_t prev_tail_dir = get_unit(*tail);
+    move_segment(get_unit(*tail), tail, 1);
+    uint8_t cur_tail_dir = get_unit(*tail);
+    if(cur_tail_dir != prev_tail_dir){
+        move_segment(prev_tail_dir, tail, SEGMENT_SIZE - 1);
+        rotate_segment(prev_tail_dir, cur_tail_dir, tail);
+    }
+    return 0;
+}
+
 
 void spawn_snake(Point *tail, Point *head, uint8_t len, direction dir){
     int i;
@@ -248,13 +264,12 @@ void spawn_snake(Point *tail, Point *head, uint8_t len, direction dir){
             head[i] = (Point){head[i - 1].x + 1, head[i - 1].y};
             tail[i] = head[i];
         }
-        /* code */
         break;
     }
     for(i = 0; i < len; ++i){
         toggle_segment(head, On);
         update_segment(head, dir);
-        move_segment(head, 1);
+        move_segment(dir, head, 1);
     }
     toggle_segment(head, On);
     update_segment(head, dir);

@@ -52,15 +52,12 @@ void game_init( void )
   
   PR2 = period;
   TMR2 = 0;
-  /* Initialize Port E to that the 8 least significant bits are set
-  as output. Begin by declaring the volatile pointer trise. */
-  volatile int* trise = (volatile int*) 0xbf886100;
-  /* Modifying the 8 least significant bits*/
-  trise = *trise & 0xff00;
+  /* Modifying the 8 least significant bits set as output*/
+  TRISE &= 0xff00;
   /* Initialize port D with the definitions in the pic32mx.h file. Bits
   11 through 5 are set as input. */
-  TRISD = TRISD | 0x0fe0;
-  TRISF = TRISF | 0x0002;
+  TRISD |= 0x0fe0;
+  TRISF |= 0x0002;
   return;
 }
 
@@ -84,37 +81,36 @@ void game_loop( void )
         IFS(0) = IFS(0) & (unsigned int)(~0x100);
         ++counter;
     }   
-    if(counter == 4){
+    if(counter == 10){
         counter = 0;
-        move_snake(HEAD_PLAYER, TAIL_PLAYER);
-        update_disp(); 
         /* Update input */
 
         /* All of these are if statements since they can all be updated at once- not exclusive.
         BTN4 - AND with corresponding bit */
         if (btn & 0x8) {
-          /* Bitshift to first digit */
-          mytime = (sw << 12) | (mytime & 0x0fff);
+            change_dir(Left, HEAD_PLAYER);
         }
         /* BTN3 - AND with corresponding bit*/
         if (btn & 0x4) {
           /* Bitshift to second digit */
-          mytime = (sw << 8) | (mytime & 0xf0ff);
+          change_dir(Right, HEAD_PLAYER);
         }
         /* BTN2 - AND with corresponding bit*/
         if (btn & 0x2) {
           /* Bitshift to third digit */
-          mytime = (sw << 4) | (mytime & 0xff0f);
+          change_dir(Up, HEAD_PLAYER);
         }
         /* BTN1 - AND with corresponding bit*/
         if (btn & 0x1) {
           /* Bitshift to third digit */
-          mytime = sw | (mytime & 0xfff0);
+          change_dir(Down, HEAD_PLAYER);
         }
         //update_disp();
         //tick( &mytime );
         /* Increment the pointer as the count goes */
         *porte+=1;
+        if(move_snake(HEAD_PLAYER, TAIL_PLAYER)) break;
+        update_disp(); 
     }
   }
 }
