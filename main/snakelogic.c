@@ -1,9 +1,10 @@
-#include "snake.h"
+#include "snakelogic.h"
 
 #define STRIPE_COLS 128
 #define STRIPE_UNITS 8
 #define UNIT_SIZE 2
 #define STRIPE_ROWS 4
+#define ROWS 32;
 
 Point FOOD_POS = {63, 15};
 
@@ -29,20 +30,20 @@ void insert_ubit(uint8_t pos, uint8_t new_bit, uint16_t * ch){
     }
 }
 
-int unit_to_ustripe(Point coordinates){
+int unit_to_ustripe(const Point coordinates){
     return (coordinates.x % STRIPE_COLS) * STRIPE_ROWS + (coordinates.y % 32) / STRIPE_UNITS;
 } 
-int get_ustripe_index(Point coordinates){
+int get_ustripe_index(const Point coordinates){
     return (coordinates.x % STRIPE_COLS) * STRIPE_ROWS + (coordinates.y % 4);
 }
 int get_unit_index(uint8_t y){
     return (y % 32) % STRIPE_UNITS;
 }
 
-uint16_t get_ustripe(Point coordinates){
+uint16_t get_ustripe(const Point coordinates){
     return SNAKES[get_ustripe_index(coordinates)];
 }
-uint8_t get_unit(Point coordinates){
+uint8_t get_unit(const Point coordinates){
     uint16_t stripe = SNAKES[unit_to_ustripe(coordinates)];
     return (stripe >> get_unit_index(coordinates.y) * UNIT_SIZE) & 0x0003;
 }
@@ -52,8 +53,8 @@ void set_ustripe(Point coordinates, uint16_t val){
 }
 void set_unit(Point coordinates, uint8_t val){
     uint8_t index = get_unit_index(coordinates.y) * UNIT_SIZE;
-    insert_bit(index, val, SNAKES + unit_to_ustripe(coordinates));
-    insert_bit(index + 1, val >> 1, SNAKES + unit_to_ustripe(coordinates));
+    insert_ubit(index, val, SNAKES + unit_to_ustripe(coordinates));
+    insert_ubit(index + 1, val >> 1, SNAKES + unit_to_ustripe(coordinates));
 }
 
 void move_segment(Point* segment, uint8_t distance){
@@ -67,10 +68,10 @@ void move_segment(Point* segment, uint8_t distance){
         for(i = 0; i < SEGMENT_SIZE; ++i) segment[i].x = (segment[i].x - distance) % STRIPE_COLS;
         break;
     case Up:
-        for(i = 0; i < SEGMENT_SIZE; ++i) segment[i].y = (segment[i].y - distance) % STRIPE_COLS;
+        for(i = 0; i < SEGMENT_SIZE; ++i) segment[i].y = (segment[i].y - distance) % ROWS;
         break;
     case Down:
-        for(i = 0; i < SEGMENT_SIZE; ++i) segment[i].y = (segment[i].y + distance) % STRIPE_COLS;
+        for(i = 0; i < SEGMENT_SIZE; ++i) segment[i].y = (segment[i].y + distance) % ROWS;
         break;
     }
 }
@@ -120,7 +121,7 @@ void ai_eat(){
     
 }
 
-uint8_t is_dead(Point *head){ 
+uint8_t is_dead(const Point *head){ 
     int i;
     for(i = 0; i < SEGMENT_SIZE; ++i){
         if(get_pixel(head[i])) return 1;
@@ -132,9 +133,9 @@ uint8_t move_snake(Point *head, Point *tail){
     int i;
     direction dir = get_unit(*head);
     move_segment(head, 1);
+    if(is_dead(head)) return 1;
     update_segment(head, dir);
     toggle_segment(tail, Off);
-    if(is_game_over(head)) return 1;
     toggle_segment(head, On);
     move_segment(tail, 1);
     return 0;
@@ -231,87 +232,31 @@ void change_dir(direction dir, Point *head){
     }
 }   
 
-
-int mytime = 0x5957;
-int counter = 0;
-char textstring[] = "text, more text, and even more text!";
-
-/* Interrupt Service Routine */
-void user_isr( void )
-{
-  return;
-}
-
-/* Lab-specific initialization goes here */
-void game_init( void )
-{
-  float periodms = 0.1;
-  int scale = 256;
-  int ck_freq = 80000000;
-
-  int period = ((periodms * ck_freq) / scale);
-
-  T2CONCLR = 0x8000;
-  T2CON = 0x70;
-  T2CONSET = 0x8000;
-  
-  PR2 = period;
-  TMR2 = 0;
-  /* Initialize Port E to that the 8 least significant bits are set
-  as output. Begin by declaring the volatile pointer trise. */
-  volatile int* trise = (volatile int*) 0xbf886100;
-  /* Modifying the 8 least significant bits*/
-  trise = *trise & 0xff00;
-  /* Initialize port D with the definitions in the pic32mx.h file. Bits
-  11 through 5 are set as input. */
-  TRISD = TRISD & 0x0fe0;
-  return;
-}
-
-/* This function is called repetitively from the main program */
-void game_loop( void )
-{
-  /* Declaring the volatile pointer porte*/
-  volatile int* porte = (volatile int*) 0xbf886110;
-  /* Initialize as 0 */
-  *porte = 0;
-  /* Variables to handle input */
-  int btn;
-  int sw;
-  while (1){
-    /* Active choice to have delay at the top of the loop for easier track keeping*/
-    //delay( 1000 );
-    int inter_flag = (IFS(0) & 0x100) >> 8;
-    btn = getbtns();
-    sw = getsw();
-    if(inter_flag){
-        IFS(0) = IFS(0) & (unsigned int)(~0x100); 
-        ++counter;
-    }   
-    if(counter == 10){
-        counter = 0;
-        /* Update input */
-
-        /* All of these are if statements since they can all be updated at once- not exclusive.
-        BTN4 - AND with corresponding bit */
-        if (btn & 0x4) {
-          /* Bitshift to first digit */
-          mytime = (sw << 12) | (mytime & 0x0fff);
+void spawn_snake(Point *tail, Point *head, uint8_t len, direction dir){
+    int i;
+    head[0] = tail[0];
+    switch (dir)
+    {
+    case Right: case Left:
+        for(i = 1; i < SEGMENT_SIZE; ++i){ 
+            head[i] = (Point){head[i - 1].x, head[i - 1].y + 1};
+            tail[i] = head[i];
         }
-        /* BTN3 - AND with corresponding bit*/
-        if (btn & 0x2) {
-          /* Bitshift to second digit */
-          mytime = (sw << 8) | (mytime & 0xf0ff);
+        break;
+    case Up: case Down:
+        for(i = 1; i < SEGMENT_SIZE; ++i){ 
+            head[i] = (Point){head[i - 1].x + 1, head[i - 1].y};
+            tail[i] = head[i];
         }
-        /* BTN2 - AND with corresponding bit*/
-        if (btn & 0x1) {
-          /* Bitshift to third digit */
-          mytime = (sw << 4) | (mytime & 0xff0f);
-        }
-        update_display();
-        tick( &mytime );
-        /* Increment the pointer as the count goes */
-        *porte+=1;
+        /* code */
+        break;
     }
-  }
+    for(i = 0; i < len; ++i){
+        toggle_segment(head, On);
+        update_segment(head, dir);
+        move_segment(head, 1);
+    }
+    toggle_segment(head, On);
+    update_segment(head, dir);
 }
+

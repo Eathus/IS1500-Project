@@ -16,8 +16,8 @@ extern Point FOOD_POS;
 
 typedef enum direction{Right, Left, Up, Down} direction;
 
-uint16_t get_ustripe(Point coordinates);
-uint8_t get_unit(Point coordinates);
+uint16_t get_ustripe(const Point coordinates);
+uint8_t get_unit(const Point coordinates);
 
 void set_ustripe(Point coordinates, uint16_t);
 void set_unit(Point coordinates, uint8_t val);
@@ -28,3 +28,5 @@ void player_eat();
 void ai_eat();
 
 void change_dir(direction dir, Point *head);
+
+void spawn_snake(Point *tail, Point *head, uint8_t len, direction dir);

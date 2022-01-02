@@ -1,0 +1,2 @@
+snakeio.c.o: snakeio.c snakeio.h /opt/mcb32tools/include/pic32mx.h
+snakeio.c snakeio.h /opt/mcb32tools/include/pic32mx.h :

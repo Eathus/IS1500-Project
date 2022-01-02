@@ -1,5 +1,7 @@
 #include "u32graphics.h"
 #include <stdio.h>
+#include "snakelogic.h"
+#include "snakegame.h"
 
 
 int main(void){
@@ -45,9 +47,9 @@ int main(void){
 	/* SPI2CON bit ON = 1; */
 	SPI2CONSET = 0x8000;
     init_disp();
-    
 
-    uint8_t i;
+
+    /*uint8_t i;
     for( i = 0; i < 15; ++i){
         set_pixel((Point){i, 16}, 1);
     }
@@ -58,9 +60,16 @@ int main(void){
     set_pixel((Point){50, 16}, 1);
     set_pixel((Point){51, 16}, 1);
     set_pixel((Point){50, 17}, 1);
-    set_pixel((Point){51, 17}, 1);
-
-    update_disp();
+    set_pixel((Point){51, 17}, 1);*/
+    Point *ptail = TAIL_PLAYER;
+    ptail[0] = (Point){0, 10};
+    spawn_snake(TAIL_PLAYER, HEAD_PLAYER, 10, Right);
+    game_init();
+    while (1)
+    {
+        game_loop();
+    }
+    //update_disp();
     return 0;
 }
 

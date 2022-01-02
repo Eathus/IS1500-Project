@@ -20,6 +20,8 @@ uint8_t SCREEN[128*4];
 
 //matrix for SCREEN in column major; stored as a unsigned char array
 
+
+
 void insert_bit(uint8_t pos, uint8_t new_bit, uint8_t * ch){
     new_bit &= 0x01;
     uint8_t mask;
