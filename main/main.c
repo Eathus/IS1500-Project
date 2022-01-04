@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "snakelogic.h"
 #include "snakegame.h"
+#include <stdlib.h>
 
 
 int main(void){
@@ -62,8 +63,8 @@ int main(void){
     set_pixel((Point){50, 17}, 1);
     set_pixel((Point){51, 17}, 1);*/
     Point *ptail = TAIL_PLAYER;
-    ptail[0] = (Point){0, 10};
-    spawn_snake(TAIL_PLAYER, HEAD_PLAYER, 10, Right);
+    ptail[0] = (Point){0, 14};
+    spawn_snake(TAIL_PLAYER, HEAD_PLAYER, 2, Right);
     game_init();
     while (1)
     {

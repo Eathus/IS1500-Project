@@ -1,6 +1,7 @@
 #pragma once
 #include "u32graphics.h"
 #include <stdint.h>   /* Declarations of uint_32 and the like */
+#include <pic32mx.h>  /* Declarations of system-specific addresses etc */
 
 #define SEGMENT_SIZE 2 
 
@@ -22,11 +23,14 @@ uint8_t get_unit(const Point coordinates);
 void set_ustripe(Point coordinates, uint16_t);
 void set_unit(Point coordinates, uint8_t val);
 
-uint8_t move_snake(Point *head, Point *tail);
+uint8_t move_snake(Point *head, Point *tail, uint8_t *grow);
 
-void player_eat();
-void ai_eat();
+uint8_t eat_check(Point *head);
+
+void eat(Point *head);
 
 void change_dir(direction dir, Point *head);
 
 void spawn_snake(Point *tail, Point *head, uint8_t len, direction dir);
+
+void toggle_food(pixel_status stat);

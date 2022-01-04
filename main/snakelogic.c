@@ -4,7 +4,7 @@
 #define STRIPE_UNITS 8
 #define UNIT_SIZE 2
 #define STRIPE_ROWS 4
-#define ROWS 32;
+#define ROWS 32
 
 Point FOOD_POS = {63, 15};
 
@@ -104,26 +104,53 @@ uint8_t eat_check(Point *head){
     }   
     return 0;
 }
-
-void player_eat(){
+void toggle_food(pixel_status stat){
     int i, j;
-    direction dir = get_unit(*HEAD_PLAYER);
     for(i = 0; i < SEGMENT_SIZE; ++i){
-        move_segment(get_unit(*HEAD_PLAYER), HEAD_PLAYER, 1);
-        update_segment(HEAD_PLAYER, dir);
-        toggle_segment(HEAD_PLAYER, On);
-    }
-    
+        for(j = 0; j < SEGMENT_SIZE; ++j){
+            Point fpos = {FOOD_POS.x + j, FOOD_POS.y + i};
+            set_pixel(fpos, stat);
+        }
+    }   
 }
-void ai_eat(){
+
+void update_food(Point coordinate){
     int i, j;
-    direction dir = get_unit(*HEAD_AI);
-    for(i = 0; i < SEGMENT_SIZE; ++i){
-        move_segment(get_unit(*HEAD_AI), HEAD_AI, 1);
-        update_segment(HEAD_AI, dir);
-        toggle_segment(HEAD_AI, On);
+    uint8_t invalid_pos = 0;
+    while(1){
+        for(i = 0; i < SEGMENT_SIZE; ++i){
+            for(j = 0; j < SEGMENT_SIZE; ++j){
+                Point fpos = {coordinate.x + j, coordinate.y + i};
+                if(get_pixel(fpos)){
+                    invalid_pos = 1;
+                    break;
+                }
+            }
+            if(invalid_pos) break;
+        }
+        if(invalid_pos){
+            coordinate.x = (coordinate.x + 1) % (STRIPE_COLS - SEGMENT_SIZE + 1);
+            coordinate.y = (coordinate.y + 1) % (ROWS - SEGMENT_SIZE + 1);
+            invalid_pos = 0;
+        }
+        else{
+            FOOD_POS = coordinate;
+            return;
+        }    
     }
-    
+}
+
+void eat(Point *head){
+    int i, j;
+    direction dir = get_unit(*head);
+    toggle_food(Off);
+    for(i = 1; i < SEGMENT_SIZE; ++i){
+        update_segment(head, dir);
+        toggle_segment(head, On);
+        move_segment(get_unit(*head), head, 1);
+    }
+    update_segment(head, dir);
+    toggle_segment(head, On);
 }
 
 uint8_t is_dead(const Point *head){ 
@@ -228,15 +255,35 @@ void change_dir(direction dir, Point *head){
     update_segment(head, dir);
 }   
 
-uint8_t move_snake(Point *head, Point *tail){
+Point prand(){
+    Point ret;
+    ret.x = (TMR3 + TAIL_PLAYER->x * HEAD_PLAYER->x) % (128 - SEGMENT_SIZE + 1);
+    ret.y = (TMR4 + TAIL_PLAYER->y * HEAD_PLAYER->y) % (32 - SEGMENT_SIZE + 1);
+    return ret;
+}
+
+uint8_t move_snake(Point *head, Point *tail, uint8_t *grow){
     int i;
     direction head_dir = get_unit(*head);
     move_segment(get_unit(*head), head, 1);
-    toggle_segment(tail, Off);
+    if(eat_check(head)){ 
+        *grow += SEGMENT_SIZE;
+        toggle_food(Off);
+        //update_food(prand());
+        update_food((Point){(HEAD_PLAYER[0].x + 5) %128, HEAD_PLAYER[0].y});
+        toggle_food(On);
+    }
+    if(*grow){
+        *grow = *grow - 1;
+        toggle_segment(head, On);
+        update_segment(head, head_dir); 
+        return 0;
+    }
     if(is_dead(head)) return 1;
+    toggle_segment(tail, Off);
     toggle_segment(head, On);
     update_segment(head, head_dir);
-    
+
     uint8_t prev_tail_dir = get_unit(*tail);
     move_segment(get_unit(*tail), tail, 1);
     uint8_t cur_tail_dir = get_unit(*tail);
