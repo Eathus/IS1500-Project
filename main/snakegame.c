@@ -101,7 +101,7 @@ void game_loop( void )
         IFS(0) = IFS(0) & (unsigned int)(~0x100);
         ++counter;
     }   
-    if(counter == 10 ){
+    if(counter == 7 ){
         counter = 0;
         /* Update input */
 
@@ -111,17 +111,17 @@ void game_loop( void )
             change_dir(Left, HEAD_PLAYER);
         }
         /* BTN3 - AND with corresponding bit*/
-        if (btn & 0x4) {
+        else if (btn & 0x4) {
           /* Bitshift to second digit */
           change_dir(Right, HEAD_PLAYER);
         }
         /* BTN2 - AND with corresponding bit*/
-        if (btn & 0x2) {
+        else if(btn & 0x2) {
           /* Bitshift to third digit */
           change_dir(Up, HEAD_PLAYER);
         }
         /* BTN1 - AND with corresponding bit*/
-        if (btn & 0x1) {
+        else if (btn & 0x1) {
           /* Bitshift to third digit */
           change_dir(Down, HEAD_PLAYER);
         }

@@ -114,7 +114,12 @@ void toggle_food(pixel_status stat){
     }   
 }
 
-void update_food(Point coordinate){
+uint8_t update_food(Point coordinate){
+    Point original = coordinate;
+    uint8_t cur_x = coordinate.x - coordinate.y;
+    uint8_t max_x = STRIPE_COLS - SEGMENT_SIZE + 1;
+    uint8_t max_y = ROWS - SEGMENT_SIZE + 1;
+
     int i, j;
     uint8_t invalid_pos = 0;
     while(1){
@@ -129,13 +134,18 @@ void update_food(Point coordinate){
             if(invalid_pos) break;
         }
         if(invalid_pos){
-            coordinate.x = (coordinate.x + 1) % (STRIPE_COLS - SEGMENT_SIZE + 1);
-            coordinate.y = (coordinate.y + 1) % (ROWS - SEGMENT_SIZE + 1);
+            coordinate.y = (coordinate.y + 1) % max_y;
+            if(coordinate.y == 0){
+                cur_x = (cur_x + 1) % max_x;
+                coordinate.x = cur_x;
+            }
+            else coordinate.x = (coordinate.x + 1) % max_x;
             invalid_pos = 0;
+            if(point_equal(&coordinate, &original)) return 1;
         }
         else{
             FOOD_POS = coordinate;
-            return;
+            return 0;
         }    
     }
 }
@@ -257,20 +267,20 @@ void change_dir(direction dir, Point *head){
 
 Point prand(){
     Point ret;
-    ret.x = (TMR3 + TAIL_PLAYER->x * HEAD_PLAYER->x) % (128 - SEGMENT_SIZE + 1);
-    ret.y = (TMR4 + TAIL_PLAYER->y * HEAD_PLAYER->y) % (32 - SEGMENT_SIZE + 1);
+    ret.x = (TMR3 + TAIL_PLAYER->x * HEAD_PLAYER->x) % (STRIPE_COLS - SEGMENT_SIZE + 1);
+    ret.y = (TMR4 + TAIL_PLAYER->y * HEAD_PLAYER->y) % (ROWS - SEGMENT_SIZE + 1);
     return ret;
 }
 
-uint8_t move_snake(Point *head, Point *tail, uint8_t *grow){
+snake_state move_snake(Point *head, Point *tail, uint8_t *grow){
     int i;
     direction head_dir = get_unit(*head);
     move_segment(get_unit(*head), head, 1);
     if(eat_check(head)){ 
         *grow += SEGMENT_SIZE;
         toggle_food(Off);
-        //update_food(prand());
-        update_food((Point){(HEAD_PLAYER[0].x + 5) %128, HEAD_PLAYER[0].y});
+        if(update_food(prand())) return Full;
+        //if(update_food((Point){(HEAD_PLAYER[0].x + 5) %128, HEAD_PLAYER[0].y})) return Full;
         toggle_food(On);
     }
     if(*grow){
@@ -279,19 +289,32 @@ uint8_t move_snake(Point *head, Point *tail, uint8_t *grow){
         update_segment(head, head_dir); 
         return 0;
     }
-    if(is_dead(head)) return 1;
+    if(is_dead(head)) return Dead;
     toggle_segment(tail, Off);
     toggle_segment(head, On);
     update_segment(head, head_dir);
 
-    uint8_t prev_tail_dir = get_unit(*tail);
+    //uint8_t prev_tail_dir = get_unit(*tail);
+
+    Point prev_tail[SEGMENT_SIZE];
+    set_segment(prev_tail, tail); 
+    
     move_segment(get_unit(*tail), tail, 1);
-    uint8_t cur_tail_dir = get_unit(*tail);
-    if(cur_tail_dir != prev_tail_dir){
+
+    for(i = 0; i < SEGMENT_SIZE; ++i){
+        uint8_t prev_tail_dir = get_unit(prev_tail[i]);
+        uint8_t cur_tail_dir = get_unit(tail[i]);
+        if(prev_tail_dir != cur_tail_dir){
+            move_segment(prev_tail_dir, tail, SEGMENT_SIZE - 1);
+            rotate_segment(prev_tail_dir, cur_tail_dir, tail);
+            break;
+        }
+    }
+    /*if(cur_tail_dir != prev_tail_dir){
         move_segment(prev_tail_dir, tail, SEGMENT_SIZE - 1);
         rotate_segment(prev_tail_dir, cur_tail_dir, tail);
-    }
-    return 0;
+    }*/
+    return Alive;
 }
 
 

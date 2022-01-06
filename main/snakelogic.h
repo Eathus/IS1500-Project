@@ -16,6 +16,7 @@ extern Point TAIL_AI[SEGMENT_SIZE];
 extern Point FOOD_POS;
 
 typedef enum direction{Right, Left, Up, Down} direction;
+typedef enum snake_state{Alive, Dead, Full} snake_state;
 
 uint16_t get_ustripe(const Point coordinates);
 uint8_t get_unit(const Point coordinates);
@@ -23,7 +24,7 @@ uint8_t get_unit(const Point coordinates);
 void set_ustripe(Point coordinates, uint16_t);
 void set_unit(Point coordinates, uint8_t val);
 
-uint8_t move_snake(Point *head, Point *tail, uint8_t *grow);
+snake_state move_snake(Point *head, Point *tail, uint8_t *grow);
 
 uint8_t eat_check(Point *head);
 
