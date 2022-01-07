@@ -10,6 +10,8 @@ typedef struct Point {
     uint8_t x, y;
 } Point;
 
+void clear_screen();
+
 uint8_t get_stripe(Point coordinates);
 uint8_t get_pixel(Point coordinates);
 

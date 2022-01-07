@@ -3,6 +3,7 @@
 #define STRIPE_COLS 128
 #define STRIPE_BIT_LEN 8
 #define STRIPE_ROWS 4
+#define SCREEN_LEN 128 * 4
 
 #define DISPLAY_CHANGE_TO_COMMAND_MODE (PORTFCLR = 0x10)
 #define DISPLAY_CHANGE_TO_DATA_MODE (PORTFSET = 0x10)
@@ -20,7 +21,12 @@ uint8_t SCREEN[128*4];
 
 //matrix for SCREEN in column major; stored as a unsigned char array
 
-
+void clear_screen(){
+	int i;
+	for(i = 0; i < SCREEN_LEN; ++i){
+		SCREEN[i] = 0;
+	}
+}
 
 void insert_bit(uint8_t pos, uint8_t new_bit, uint8_t * ch){
     new_bit &= 0x01;

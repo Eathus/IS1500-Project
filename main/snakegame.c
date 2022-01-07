@@ -129,7 +129,27 @@ void game_loop( void )
         //tick( &mytime );
         /* Increment the pointer as the count goes */
         *porte+=1;
-        if(move_snake(HEAD_PLAYER, TAIL_PLAYER, &grow_player)) break;
+        snake_state sstate = move_snake(HEAD_PLAYER, TAIL_PLAYER, &grow_player);
+        int i;
+        switch (sstate)
+        {
+        case Full:
+          clear_screen();
+          for(i = 0; i < 128; ++i) set_pixel((Point){i, 0}, 1);
+          update_disp(); 
+          return;
+          break;
+        
+        case Dead:
+          clear_screen();
+          for(i = 0; i < 128; ++i) set_pixel((Point){i, 31}, 1);
+          update_disp(); 
+          return;
+          break;
+        default:
+          break;
+        }
+
         update_disp(); 
     }
   }
