@@ -91,13 +91,13 @@ void update_segment(Point *segment, direction dir){
 }
 
 uint8_t point_equal(const Point *left, const Point *right){
-    return left->x == right->x && left->y == right->y;
+    return left->x % STRIPE_COLS == right->x % STRIPE_COLS && left->y % ROWS == right->y % ROWS;
 }
 uint8_t eat_check(Point *head){
     int i, j, k;
     for(i = 0; i < SEGMENT_SIZE; ++i){
         for(j = 0; j < SEGMENT_SIZE; ++j){
-            Point fpos = {FOOD_POS.x + j, FOOD_POS.y + i};
+            Point fpos = {(FOOD_POS.x + j) %  STRIPE_COLS, (FOOD_POS.y + i) % ROWS};
             for(k = 0; k < SEGMENT_SIZE; ++k)
                 if(point_equal(&fpos, head + k)) return 1;
         }
@@ -108,7 +108,7 @@ void toggle_food(pixel_status stat){
     int i, j;
     for(i = 0; i < SEGMENT_SIZE; ++i){
         for(j = 0; j < SEGMENT_SIZE; ++j){
-            Point fpos = {FOOD_POS.x + j, FOOD_POS.y + i};
+            Point fpos = {(FOOD_POS.x + j) %  STRIPE_COLS, (FOOD_POS.y + i) % ROWS};
             set_pixel(fpos, stat);
         }
     }   
@@ -125,7 +125,7 @@ uint8_t update_food(Point coordinate){
     while(1){
         for(i = 0; i < SEGMENT_SIZE; ++i){
             for(j = 0; j < SEGMENT_SIZE; ++j){
-                Point fpos = {coordinate.x + j, coordinate.y + i};
+                Point fpos = {(coordinate.x + j) % STRIPE_COLS, (coordinate.y + i) % ROWS};
                 if(get_pixel(fpos)){
                     invalid_pos = 1;
                     break;
@@ -267,8 +267,8 @@ void change_dir(direction dir, Point *head){
 
 Point prand(){
     Point ret;
-    ret.x = (TMR3 + TAIL_PLAYER->x * HEAD_PLAYER->x) % (STRIPE_COLS - SEGMENT_SIZE + 1);
-    ret.y = (TMR4 + TAIL_PLAYER->y * HEAD_PLAYER->y) % (ROWS - SEGMENT_SIZE + 1);
+    ret.x = ((TMR3 + TAIL_PLAYER->x * HEAD_PLAYER->x) % (STRIPE_COLS / SEGMENT_SIZE)) * SEGMENT_SIZE;
+    ret.y = ((TMR4 + TAIL_PLAYER->y * HEAD_PLAYER->y) % (ROWS / SEGMENT_SIZE)) * SEGMENT_SIZE;
     return ret;
 }
 
@@ -283,13 +283,14 @@ snake_state move_snake(Point *head, Point *tail, uint8_t *grow){
         //if(update_food((Point){(HEAD_PLAYER[0].x + 5) %128, HEAD_PLAYER[0].y})) return Full;
         toggle_food(On);
     }
+    if(is_dead(head)) return Dead;
     if(*grow){
         *grow = *grow - 1;
         toggle_segment(head, On);
         update_segment(head, head_dir); 
         return 0;
     }
-    if(is_dead(head)) return Dead;
+
     toggle_segment(tail, Off);
     toggle_segment(head, On);
     update_segment(head, head_dir);

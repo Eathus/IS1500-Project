@@ -1,7 +1,6 @@
 #include "snakegame.h"
 
 int mytime = 0x5957;
-int counter = 0;
 char textstring[] = "text, more text, and even more text!";
 
 void tick( unsigned int * timep )
@@ -77,10 +76,37 @@ void game_init( void )
     ret.y = (TMR4 + TAIL_PLAYER->y * HEAD_PLAYER->y) % (32 - SEGMENT_SIZE + 1);
     return ret;
 }*/
+typedef struct Dir_queue {
+  uint8_t size;
+  int8_t last;
+  direction *queue;
+} Dir_queue;
 
+void qpush(direction dir, Dir_queue *queue, uint8_t replace){
+  if(queue->last < queue->size - 1) {
+    queue->last++;
+    queue->queue[queue->last] = dir;
+  }
+  else if (replace) queue->queue[0] = dir;
+}
+uint8_t qpop(Dir_queue *queue){
+  if(queue->last < 0) return -1; 
+  int i;
+  direction ret = queue->queue[0];
+  for(i = 1; i <= queue->last; ++i){
+    queue->queue[i-1] = queue->queue[i];
+  }
+  queue->last--;
+  return ret;
+}
 /* This function is called repetitively from the main program */
 void game_loop( void )
 {
+  int update_counter = 0;
+  direction queue[SEGMENT_SIZE];
+  Dir_queue dir_buffer = {SEGMENT_SIZE, -1, queue};
+
+  uint8_t frame_update = 0;
   toggle_food(On);
   uint8_t grow_player = 0;
   uint16_t rand_count = 0;  
@@ -99,31 +125,33 @@ void game_loop( void )
     sw = getsw();
     if(inter_flag){
         IFS(0) = IFS(0) & (unsigned int)(~0x100);
-        ++counter;
+        ++update_counter;
     }   
-    if(counter == 7 ){
-        counter = 0;
+    if(update_counter == 6 ){
+        update_counter = 0;
         /* Update input */
 
         /* All of these are if statements since they can all be updated at once- not exclusive.
         BTN4 - AND with corresponding bit */
         if (btn & 0x8) {
-            change_dir(Left, HEAD_PLAYER);
+          qpush(Left, &dir_buffer, 1);
         }
         /* BTN3 - AND with corresponding bit*/
         else if (btn & 0x4) {
-          /* Bitshift to second digit */
-          change_dir(Right, HEAD_PLAYER);
+          qpush(Right, &dir_buffer, 1);
         }
         /* BTN2 - AND with corresponding bit*/
         else if(btn & 0x2) {
-          /* Bitshift to third digit */
-          change_dir(Up, HEAD_PLAYER);
+          qpush(Up, &dir_buffer, 1);
         }
         /* BTN1 - AND with corresponding bit*/
         else if (btn & 0x1) {
-          /* Bitshift to third digit */
-          change_dir(Down, HEAD_PLAYER);
+          qpush(Down, &dir_buffer, 1);
+        }
+        if(frame_update == SEGMENT_SIZE){
+          uint8_t dir_change = qpop(&dir_buffer);
+          if(dir_change != -1) change_dir(dir_change, HEAD_PLAYER);
+          frame_update = 0;
         }
         //update_disp();
         //tick( &mytime );
@@ -133,24 +161,24 @@ void game_loop( void )
         int i;
         switch (sstate)
         {
-        case Full:
-          clear_screen();
-          for(i = 0; i < 128; ++i) set_pixel((Point){i, 0}, 1);
-          update_disp(); 
-          return;
-          break;
-        
-        case Dead:
-          clear_screen();
-          for(i = 0; i < 128; ++i) set_pixel((Point){i, 31}, 1);
-          update_disp(); 
-          return;
-          break;
-        default:
-          break;
+          case Full:
+            clear_screen();
+            for(i = 0; i < 128; ++i) set_pixel((Point){i, 0}, 1);
+            update_disp(); 
+            return;
+            break;
+          
+          case Dead:
+            clear_screen();
+            for(i = 0; i < 128; ++i) set_pixel((Point){i, 31}, 1);
+            update_disp(); 
+            return;
+            break;
+          default:
+            break;
         }
-
         update_disp(); 
+        frame_update++;
     }
   }
 }

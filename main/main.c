@@ -63,7 +63,7 @@ int main(void){
     set_pixel((Point){50, 17}, 1);
     set_pixel((Point){51, 17}, 1);*/
     Point *ptail = TAIL_PLAYER;
-    ptail[0] = (Point){0, 15};
+    ptail[0] = (Point){0, 31};
     spawn_snake(TAIL_PLAYER, HEAD_PLAYER, 10, Right);
     game_init();
     //while (1)
