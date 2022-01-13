@@ -1,4 +1,5 @@
 #include "u32graphics.h"
+#include "data.h"
 
 #define STRIPE_COLS 128
 #define STRIPE_BIT_LEN 8
@@ -67,6 +68,9 @@ void set_pixel(Point coordinates, uint8_t val){
     uint8_t index = get_pixel_index(coordinates.y);
     insert_bit(index, val, SCREEN + pixel_to_stripe(coordinates));
 }
+Point chcoord_to_stcoord(Point coordinates){
+	return (Point){coordinates.x * 8, coordinates.y};
+}
 
 void quicksleep(int cyc) {
 	int i;
@@ -78,6 +82,42 @@ uint8_t spi_send_recv(uint8_t data) {
 	SPI2BUF = data;
 	while(!(SPI2STAT & 1));
 	return SPI2BUF;
+}
+
+
+
+void write_char(Point chcoord, char ch){
+	int i;
+	int c = ch;
+	chcoord = chcoord_to_stcoord(chcoord);
+	for(i = 0; i < 8; ++i){
+		set_stripe((Point){chcoord.x + i, chcoord.y}, FONT[c * 8 + i]);
+	}
+}
+void invert_char(Point chcoord){
+	int i;
+	chcoord = chcoord_to_stcoord(chcoord);
+	for(i = 0; i < 8; ++i){
+		set_stripe((Point){chcoord.x + i, chcoord.y}, ~get_stripe((Point){chcoord.x + i, chcoord.y}));
+	}
+}
+
+void write_string(uint8_t line, char *str){
+	line %= 4;
+	int i;
+	for(i = 0; i < 16; ++i){
+		if(*str == '\n') return;
+		if(*str & 0x80) continue;
+		write_char((Point){i, line}, *str);
+		str++;
+	}
+}
+void invert_string(uint8_t line){
+	line %= 4;
+	int i, j;
+	for(i = 0; i < 16; ++i){
+		invert_char((Point){i, line});
+	}
 }
 
 void init_disp(void) {

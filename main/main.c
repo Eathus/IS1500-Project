@@ -70,7 +70,13 @@ int main(void){
     //{
         game_loop();
     //}
-    //update_disp();
+    /*write_string(0, "ABCDEFGHIJKLMNOP\n");
+    write_string(1, "QRSTUVWXYZabcdef\n");
+    write_string(2, "ghijklmnopqrstuv\n");
+    write_string(3, "wxyz0123456789-_\n");
+    invert_char((Point){2, 0});
+    invert_string(3);*/
+    update_disp();
     return 0;
 }
 

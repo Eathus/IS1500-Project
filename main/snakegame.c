@@ -67,6 +67,11 @@ void game_init( void )
   11 through 5 are set as input. */
   TRISD |= 0x0fe0;
   TRISF |= 0x0002;
+
+  IPC(2) = (0x0 << 2 | 0x0) | (IPC(2) & ~0x1F); 
+  IFS(0) &= (unsigned int)(~0x100);
+  IEC(0) |= (0x100);
+  asm volatile("ei");
   return;
 }
 
@@ -124,7 +129,7 @@ void game_loop( void )
     btn = getbtns();
     sw = getsw();
     if(inter_flag){
-        IFS(0) = IFS(0) & (unsigned int)(~0x100);
+        IFS(0) &= (unsigned int)(~0x100);
         ++update_counter;
     }   
     if(update_counter == 6 ){
