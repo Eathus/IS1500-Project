@@ -105,14 +105,13 @@ uint8_t qpop(Dir_queue *queue){
   return ret;
 }
 /* This function is called repetitively from the main program */
-void game_loop( void )
-{
+void game_loop(Point *tail, Point *head, uint16_t *snakes, Point *food_pos ){
   int update_counter = 0;
   direction queue[SEGMENT_SIZE];
   Dir_queue dir_buffer = {SEGMENT_SIZE, -1, queue};
 
   uint8_t frame_update = 0;
-  toggle_food(On);
+  toggle_food(On, food_pos);
   uint8_t grow_player = 0;
   uint16_t rand_count = 0;  
   /* Declaring the volatile pointer porte*/
@@ -121,18 +120,16 @@ void game_loop( void )
   *porte = 0;
   /* Variables to handle input */
   int btn;
-  int sw;
   while (1){
     /* Active choice to have delay at the top of the loop for easier track keeping*/
     //delay( 1000 );
     int inter_flag = (IFS(0) & 0x100) >> 8;
     btn = getbtns();
-    sw = getsw();
     if(inter_flag){
         IFS(0) &= (unsigned int)(~0x100);
         ++update_counter;
     }   
-    if(update_counter == 6 ){
+    if(update_counter == 5){
         update_counter = 0;
         /* Update input */
 
@@ -140,7 +137,7 @@ void game_loop( void )
         BTN4 - AND with corresponding bit */
         if (btn & 0x8) {
           qpush(Left, &dir_buffer, 1);
-        }
+        } 
         /* BTN3 - AND with corresponding bit*/
         else if (btn & 0x4) {
           qpush(Right, &dir_buffer, 1);
@@ -155,14 +152,14 @@ void game_loop( void )
         }
         if(frame_update == SEGMENT_SIZE){
           uint8_t dir_change = qpop(&dir_buffer);
-          if(dir_change != -1) change_dir(dir_change, HEAD_PLAYER);
+          if(dir_change != -1) change_dir(dir_change, head, snakes);
           frame_update = 0;
         }
         //update_disp();
         //tick( &mytime );
         /* Increment the pointer as the count goes */
         *porte+=1;
-        snake_state sstate = move_snake(HEAD_PLAYER, TAIL_PLAYER, &grow_player);
+        snake_state sstate = move_snake(head, tail, food_pos, snakes, &grow_player);
         int i;
         switch (sstate)
         {

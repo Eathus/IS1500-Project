@@ -131,9 +131,3 @@ const uint8_t const FONT[] = {
 	0, 0, 4, 2, 4, 2, 0, 0,
 	0, 120, 68, 66, 68, 120, 0, 0,
 };
-
-const char* const KEYBOARD[] = {
-	"ABCDEFGHIJK ?122",
-	"LMNOPQRSTUW Caps",
-	"XYZ  Space  Back"
-};

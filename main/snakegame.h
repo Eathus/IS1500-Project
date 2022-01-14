@@ -7,4 +7,4 @@
 void game_init( void );
 
 /* This function is called repetitively from the main program */
-void game_loop( void );
+void game_loop(Point *tail, Point *head, uint16_t *snakes, Point *food_pos);

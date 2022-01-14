@@ -1,8 +1,8 @@
-#include "u32graphics.h"
+#include <stdlib.h>
 #include <stdio.h>
+#include "u32graphics.h"
 #include "snakelogic.h"
 #include "snakegame.h"
-#include <stdlib.h>
 
 
 int main(void){
@@ -62,21 +62,29 @@ int main(void){
     set_pixel((Point){51, 16}, 1);
     set_pixel((Point){50, 17}, 1);
     set_pixel((Point){51, 17}, 1);*/
-    Point *ptail = TAIL_PLAYER;
-    ptail[0] = (Point){0, 31};
-    spawn_snake(TAIL_PLAYER, HEAD_PLAYER, 10, Right);
+    uint16_t snakes[128*4];
+    Point head_player[SEGMENT_SIZE];
+    Point tail_player[SEGMENT_SIZE];
+
+    Point head_ai[SEGMENT_SIZE];
+    Point tail_ai[SEGMENT_SIZE];
+    tail_player[0] = (Point){0, 31};
+    Point food_pos = {63, 15};
+    spawn_snake(tail_player, head_player, 10, Right, snakes);
     game_init();
     //while (1)
     //{
-        game_loop();
+        game_loop(tail_player, head_player, snakes, &food_pos);
     //}
-    /*write_string(0, "ABCDEFGHIJKLMNOP\n");
-    write_string(1, "QRSTUVWXYZabcdef\n");
-    write_string(2, "ghijklmnopqrstuv\n");
-    write_string(3, "wxyz0123456789-_\n");
-    invert_char((Point){2, 0});
-    invert_string(3);*/
+    /*
+    write_string(1, "abcdefghijk CAPS");
+    write_string(1, "abcdefghijk CAPS");
+    write_string(2, "lmnopqrstuv BACK");
+    write_string(3, "wxyz01234 	SPACE");
+    //invert_char((Point){2, 0});
+    //invert_string(3);
     update_disp();
+    */
     return 0;
 }
 

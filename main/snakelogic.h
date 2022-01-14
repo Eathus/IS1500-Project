@@ -5,8 +5,6 @@
 
 #define SEGMENT_SIZE 2 
 
-extern uint16_t SNAKES[128*4];
-
 extern Point HEAD_PLAYER[SEGMENT_SIZE];
 extern Point TAIL_PLAYER[SEGMENT_SIZE];
 
@@ -18,20 +16,20 @@ extern Point FOOD_POS;
 typedef enum direction{Right, Left, Up, Down} direction;
 typedef enum snake_state{Alive, Dead, Full} snake_state;
 
-uint16_t get_ustripe(const Point coordinates);
-uint8_t get_unit(const Point coordinates);
+uint16_t get_ustripe(const Point coordinates, uint16_t const *snakes);
+uint8_t get_unit(const Point coordinates, uint16_t const *snakes);
 
-void set_ustripe(Point coordinates, uint16_t);
-void set_unit(Point coordinates, uint8_t val);
+void set_ustripe(Point coordinates, uint16_t, uint16_t *snakes);
+void set_unit(Point coordinates, uint8_t val, uint16_t *snakes);
 
-snake_state move_snake(Point *head, Point *tail, uint8_t *grow);
+snake_state move_snake(Point *head, Point *tail, Point *food_pos, uint16_t *snakes, uint8_t *grow);
 
-uint8_t eat_check(Point *head);
+uint8_t eat_check(Point *head, Point const *food_pos);
 
-void eat(Point *head);
+void eat(Point *head, Point *food_pos, uint16_t *snakes);
 
-void change_dir(direction dir, Point *head);
+void change_dir(direction dir, Point *head, uint16_t *snakes);
 
-void spawn_snake(Point *tail, Point *head, uint8_t len, direction dir);
+void spawn_snake(Point *tail, Point *head, uint8_t len, direction dir, uint16_t *snakes);
 
-void toggle_food(pixel_status stat);
+void toggle_food(pixel_status stat, Point const *food_pos);
