@@ -3,6 +3,7 @@
 #include "u32graphics.h"
 #include "snakelogic.h"
 #include "snakegame.h"
+#include "menus.h"
 
 
 int main(void){
@@ -62,7 +63,7 @@ int main(void){
     set_pixel((Point){51, 16}, 1);
     set_pixel((Point){50, 17}, 1);
     set_pixel((Point){51, 17}, 1);*/
-    uint16_t snakes[128*4];
+    /*uint16_t snakes[128*4];
     Point head_player[SEGMENT_SIZE];
     Point tail_player[SEGMENT_SIZE];
 
@@ -75,7 +76,7 @@ int main(void){
     //while (1)
     //{
         game_loop(tail_player, head_player, snakes, &food_pos);
-    //}
+    //}*/
     /*
     write_string(1, "abcdefghijk CAPS");
     write_string(1, "abcdefghijk CAPS");
@@ -85,6 +86,8 @@ int main(void){
     //invert_string(3);
     update_disp();
     */
+    game_init();
+    name_input();
     return 0;
 }
 
