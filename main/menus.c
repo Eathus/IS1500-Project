@@ -192,22 +192,12 @@ void options_page_scroll(direction dir, Options_menu *menu) {
 void update_options(Options_menu const * menu){
     invert_row(mod_sub(menu->index, menu->start, menu->len));
 }
-game_state return_options(){
-    const Options_button const options[] = {
-        //casting to avoid "undefined reference to `memcpy'" - error
-        (Options_button){Cancel, "1: CANCEL\n"},
-        (Options_button){Game, "2: RETRY\n"},
-        (Options_button){Options, "3: BACK TO MENU\n"},
-    };
-    Options_menu menu = {
-        options,
-        0, 0, 3
-    };
+game_state return_options(Options_menu * menu){
     int btn;
     int update_counter = 0;
 
-    draw_options(&menu);
-    update_options(&menu);
+    draw_options(menu);
+    update_options(menu);
     while (1){
         int inter_flag = (IFS(0) & 0x100) >> 8;
         btn = getbtns();
@@ -219,19 +209,19 @@ game_state return_options(){
             update_counter = 0;
             if (btn & 0xC) {
                 clear_screen();
-                return menu.options[menu.index].option;
+                return menu->options[menu->index].option;
             }
             /* BTN2 - AND with corresponding bit*/
             else if(btn & 0x2) {
-                update_options(&menu);
-                options_page_scroll(Up, &menu);
-                update_options(&menu);
+                update_options(menu);
+                options_page_scroll(Up, menu);
+                update_options(menu);
             }
             /* BTN1 - AND with corresponding bit*/
             else if (btn & 0x1) {
-                update_options(&menu);
-                options_page_scroll(Down, &menu);
-                update_options(&menu);
+                update_options(menu);
+                options_page_scroll(Down, menu);
+                update_options(menu);
             }
             update_disp(); 
         }
@@ -336,7 +326,18 @@ game_state name_input(char *name){
                         }
                         break;
                     case Enter:
-                        ret = return_options();
+                    {
+                        Options_button options[] = {
+                            //casting to avoid "undefined reference to `memcpy'" - error
+                            (Options_button){Cancel, "1: CANCEL\n"},
+                            (Options_button){Game, "2: RETRY\n"},
+                            (Options_button){Options, "3: BACK TO MENU\n"},
+                        };
+                        Options_menu menu = {
+                            options,
+                            0, 0, 3
+                        };
+                        ret = return_options(&menu);
                         switch (ret)
                         {
                         case Cancel:
@@ -348,6 +349,7 @@ game_state name_input(char *name){
                             return ret;
                         }
                         break;
+                    }
                     default:
                         break;
                     }
