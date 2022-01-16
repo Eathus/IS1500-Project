@@ -4,7 +4,7 @@
 #include "snakelogic.h"
 #include "u32graphics.h"
 
-typedef enum game_state{Start, Options, Level_diff, AI_diff, Score_board, Game, End_options, Name_input, Return_options} game_state;
+typedef enum game_state{Start, Options, Level_diff, AI_diff, Score_board, Game, End_options, Name_input, Return_options, Cancel} game_state;
 typedef enum difficulty{Easy, Normal, Hard} difficulty;
 
 void game_init( void );

@@ -102,7 +102,7 @@ void invert_char(Point chcoord){
 	}
 }
 
-void write_string(uint8_t line, char const *str){
+void write_row(uint8_t line, char const *str){
 	line %= 4;
 	int i;
 	for(i = 0; i < 16; ++i){
@@ -115,10 +115,27 @@ void write_string(uint8_t line, char const *str){
 		str++;
 	}
 }
-void invert_string(uint8_t line){
+void invert_row(uint8_t line){
 	line %= 4;
 	int i, j;
 	for(i = 0; i < 16; ++i){
+		invert_char((Point){i, line});
+	}
+}
+
+void write_string(uint8_t line, char const *str, uint8_t len){
+	line %= 4;
+	int i;
+	for(i = 0; i < len; ++i){
+		if(*str & 0x80) continue;
+		write_char((Point){i, line}, *str);
+		str++;
+	}
+}
+void invert_string(uint8_t line, uint8_t len){
+	line %= 4;
+	int i, j;
+	for(i = 0; i < len; ++i){
 		invert_char((Point){i, line});
 	}
 }

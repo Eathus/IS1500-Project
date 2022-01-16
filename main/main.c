@@ -48,8 +48,9 @@ int main(void){
 	SPI2CONSET = 0x20;
 	/* SPI2CON bit ON = 1; */
 	SPI2CONSET = 0x8000;
+    
     init_disp();
-
+    game_init();
 
     /*uint8_t i;
     for( i = 0; i < 15; ++i){
@@ -78,16 +79,17 @@ int main(void){
         game_loop(tail_player, head_player, snakes, &food_pos);
     //}*/
     /*
-    write_string(1, "abcdefghijk CAPS");
-    write_string(1, "abcdefghijk CAPS");
-    write_string(2, "lmnopqrstuv BACK");
-    write_string(3, "wxyz01234 	SPACE");
+    write_row(1, "abcdefghijk CAPS");
+    write_row(1, "abcdefghijk CAPS");
+    write_row(2, "lmnopqrstuv BACK");
+    write_row(3, "wxyz01234 	SPACE");
     //invert_char((Point){2, 0});
-    //invert_string(3);
+    //invert_row(3);
     update_disp();
     */
-    game_init();
-    return_options();
+    char name[10];
+    game_state gs = name_input(name);
+    
     return 0;
 }
 
