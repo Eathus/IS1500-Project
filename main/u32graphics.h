@@ -21,7 +21,7 @@ void set_pixel(Point coordinates, uint8_t val);
 void write_char(Point chcoord, char ch);
 void invert_char(Point chcoord);
 
-void write_string(uint8_t line, char *str);
+void write_string(uint8_t line, char const *str);
 void invert_string(uint8_t line);
 
 void init_disp(void);

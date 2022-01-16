@@ -2,8 +2,9 @@
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
+#include <pic32mx.h>  /* Declarations of system-specific addresses etc */
 #include "data.h"
 #include "u32graphics.h"
-#include <pic32mx.h>  /* Declarations of system-specific addresses etc */
+#include "snakegame.h"
 
-void name_input(void);
+game_state name_input(char *name);

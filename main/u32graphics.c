@@ -102,11 +102,14 @@ void invert_char(Point chcoord){
 	}
 }
 
-void write_string(uint8_t line, char *str){
+void write_string(uint8_t line, char const *str){
 	line %= 4;
 	int i;
 	for(i = 0; i < 16; ++i){
-		if(*str == '\n') return;
+		if(*str == '\n' || *str == '\0'){
+			for(i; i < 16; ++i) write_char((Point){i, line}, ' ');
+			return;
+		}
 		if(*str & 0x80) continue;
 		write_char((Point){i, line}, *str);
 		str++;

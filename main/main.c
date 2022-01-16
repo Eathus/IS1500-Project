@@ -87,7 +87,7 @@ int main(void){
     update_disp();
     */
     game_init();
-    name_input();
+    return_options();
     return 0;
 }
 
