@@ -4,24 +4,7 @@
 
 #define CHAR_ROW_SIZE 16
 #define NUM_ROWS 4
-typedef enum button_type{Letter, Number, Enter, Caps, Back, Space} button_type; 
-typedef struct Keyboard_button {
-    Point const pos;
-    button_type const type;
-    char const *text;
-} Keyboard_button;
 
-typedef struct Options_button {
-    uint8_t const option;
-    char const *text;
-} Options_button;
-
-typedef struct Options_menu {
-    Options_button const * options;
-    uint8_t start;
-    uint8_t index;
-    uint8_t const len; 
-} Options_menu;
 
 int abs(int val){
     return val < 0 ? val * (-1) : val;
@@ -125,17 +108,27 @@ void draw_keyboard(Keyboard_button const *keyboard, uint8_t len, uint8_t caps){
         draw_kb_button(i, keyboard, len, caps);
     }
 }
+/*
 void draw_options(Options_menu const *menu){
     int i;
     char empty = '\n';
-    if(menu->len < 4)
-        for(i = 0; i < 4; ++i){
-            if(menu->len <= i) write_row(i, &empty);
-            else write_row(i, menu->options[(menu->start + i)].text);
+    if(menu->len < menu->page_len)
+        for(i = 0; i < menu->page_len; ++i){
+            if(menu->len <= i) write_row(i + 4 - menu->page_len, &empty);
+            else write_row(i + 4 - menu->page_len, menu->options[(menu->start + i)].text);
         }
     else{
-        for(i = menu->start; i < menu->start + 4; ++i)
-            write_row(mod_sub(i, menu->start, menu->len), menu->options[i % menu->len].text);
+        for(i = menu->start; i < menu->start + menu->page_len; ++i)
+            write_row(mod_sub(i, menu->start, menu->len) + 4 - menu->page_len, menu->options[i % menu->len].text);
+    }
+}
+*/
+void draw_options(Options_menu const *menu){
+    int i;
+    char empty = '\n';
+    for(i = 0; i < menu->page_len; ++i){
+        if(menu->len <= i + menu->start) write_row(i + 4 - menu->page_len, &empty);
+        else write_row(i + 4 - menu->page_len, menu->options[menu->start + i].text);
     }
 }
 /*void options_button_scroll(direction dir, uint8_t *index, uint8_t *start, Options_button const * options, uint8_t len) {
@@ -160,39 +153,42 @@ void draw_options(Options_menu const *menu){
     }
 }*/
 
+//in case usefull;
+//draw_options(&(Options_menu){menu->options, menu->start, menu->index, menu->len % menu->page_len, menu->page_len});
+//draw_options(&(Options_menu){menu->options, menu->start, menu->index, menu->len - menu->index, menu->page_len});
+
 void options_page_scroll(direction dir, Options_menu *menu) {
     uint8_t prev_page = 0;
     switch(dir) {
         case Up:
-            if(menu->index == menu->start) prev_page = 1;
+            if(menu->index == menu->start && menu->page_len < menu->len) prev_page = 1;
             menu->index = mod_sub(menu->index, 1, menu->len);
             if(prev_page){
                 prev_page = 0;
-                if(menu->index == menu->len - 1 && menu->len % 4 != 0){
-                    menu->start = menu->len - (menu->len % 4);
-                    draw_options(&(Options_menu){menu->options, menu->start, menu->index, menu->len % 4});
-                }
-                else{
-                    menu->start = mod_sub(menu->start, 4, menu->len);
-                    draw_options(menu);
-                }
+                if(menu->index == menu->len - 1 && menu->len % menu->page_len != 0){
+                    menu->start = menu->len - (menu->len % menu->page_len);
+                else menu->start = mod_sub(menu->start, menu->page_len, menu->len);
+                draw_options(menu);
             }
             break;
         case Down:
             menu->index = (menu->index + 1) % menu->len;
-            if(menu->index == (menu->start + 4) || menu->index == 0){
+            if(menu->index == (menu->start + menu->page_len) || menu->index == 0){
                 menu->start = menu->index;
-                if(menu->len - menu->index < 4)
-                    draw_options(&(Options_menu){menu->options, menu->start, menu->index, menu->len - menu->index});
-                else draw_options(menu);
+                draw_options(menu);
             }
             break;
     }
 }
 void update_options(Options_menu const * menu){
-    invert_row(mod_sub(menu->index, menu->start, menu->len));
+    invert_row(mod_sub(menu->index, menu->start, menu->len) + 4 - menu->page_len);
+    char chars;
+    
+    //num32asc(&chars, menu->start);
+    //num32asc(&chars, menu->index);
+    //write_row(0, &chars);
 }
-game_state return_options(Options_menu * menu){
+game_state locator_menu(Options_menu * menu){
     int btn;
     int update_counter = 0;
 
@@ -227,6 +223,7 @@ game_state return_options(Options_menu * menu){
         }
     }
 }
+
 game_state name_input(char *name){
     char upper[3] = {1, 8, 3};
     const Keyboard_button const keyboard[] = {
@@ -335,9 +332,10 @@ game_state name_input(char *name){
                         };
                         Options_menu menu = {
                             options,
-                            0, 0, 3
+                            0, 0, 3, 3
                         };
-                        ret = return_options(&menu);
+                        write_row(0, "Placeholder");
+                        ret = locator_menu(&menu);
                         switch (ret)
                         {
                         case Cancel:

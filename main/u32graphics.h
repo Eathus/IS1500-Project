@@ -26,6 +26,7 @@ void invert_row(uint8_t line);
 
 void write_string(uint8_t line, char const *str, uint8_t len);
 void invert_string(uint8_t line, uint8_t len);
+void num32asc( char * s, int n );
 
 void init_disp(void);
 void update_disp();

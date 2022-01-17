@@ -105,7 +105,7 @@ uint8_t qpop(Dir_queue *queue){
   return ret;
 }
 /* This function is called repetitively from the main program */
-void game_loop(Point *tail, Point *head, uint16_t *snakes, Point *food_pos ){
+game_state game_loop(Point *tail, Point *head, uint16_t *snakes, Point *food_pos ){
   int update_counter = 0;
   direction queue[SEGMENT_SIZE];
   Dir_queue dir_buffer = {SEGMENT_SIZE, -1, queue};
@@ -171,11 +171,23 @@ void game_loop(Point *tail, Point *head, uint16_t *snakes, Point *food_pos ){
             break;
           
           case Dead:
+          {
             clear_screen();
+            Options_button options[] = {
+              //casting to avoid "undefined reference to `memcpy'" - error
+              (Options_button){Cancel, "1: CANCEL\n"},
+              (Options_button){Game, "2: RETRY\n"},
+              (Options_button){Options, "3: BACK TO MENU\n"},
+            };
+          Options_menu menu = {
+              options,
+              0, 0, 3
+          };
             for(i = 0; i < 128; ++i) set_pixel((Point){i, 31}, 1);
             update_disp(); 
             return;
             break;
+          }
           default:
             break;
         }

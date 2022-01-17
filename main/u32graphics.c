@@ -140,6 +140,12 @@ void invert_string(uint8_t line, uint8_t len){
 	}
 }
 
+void num32asc( char * s, int n ){
+  int i;
+  for( i = 28; i >= 0; i -= 4 )
+    *s++ = "0123456789ABCDEF"[ (n >> i) & 15 ];
+}
+
 void init_disp(void) {
     DISPLAY_CHANGE_TO_COMMAND_MODE;
 	quicksleep(10);

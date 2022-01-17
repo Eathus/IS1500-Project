@@ -52,6 +52,8 @@ int main(void){
     init_disp();
     game_init();
 
+    
+
     /*uint8_t i;
     for( i = 0; i < 15; ++i){
         set_pixel((Point){i, 16}, 1);
