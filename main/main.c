@@ -51,8 +51,162 @@ int main(void){
     
     init_disp();
     game_init();
-
     
+    game_state current = Main;
+    int current_score = 0;
+    Score scores[10];
+    Sboard score_board = {scores, 0, 10};
+
+/*
+    Score score1;
+    score1.score = 2;
+    score1.name[0] = 'a';
+    score1.name[1] = 0;
+    
+    Score score2;
+    score2.score = 4;
+    score2.name[0] = 'b';
+    score2.name[1] = 0;
+
+    Score score3;
+    score3.score = 5;
+    score3.name[0] = 'c';
+    score3.name[1] = 0;
+
+    Score score4;
+    score4.score = 6;
+    score4.name[0] = 'd';
+    score4.name[1] = 0;
+
+
+    Score score5;
+    score5.score = 3;
+    score5.name[0] = 'e';
+    score5.name[1] = 0;
+
+    insert_score(&score_board, &score1);
+    insert_score(&score_board, &score2);
+    insert_score(&score_board, &score3);
+    insert_score(&score_board, &score4);
+    insert_score(&score_board, &score5);
+*/
+    difficulty Level_diff = None;
+    difficulty AI_diff = None;
+    while (1){
+        int len;
+        char* row_num = itoaconv(current, &len);
+        write_char((Point){15, 0}, row_num[0]);
+        update_disp(); 
+        switch (current)
+        {
+        case Start:{
+            //Put start screen code here
+            break;
+        }
+        case Main:{
+            Options_button main_options[] = {
+                //casting to avoid "undefined reference to `memcpy'" - error
+                (Options_button){Game, "Play\n"},
+                (Options_button){Score_board, "Score board\n"},
+                (Options_button){Level_diff, "Level difficulty\n"},
+                (Options_button){AI_diff, "AI difficulty\n"},
+                (Options_button){Start, "Back to start\n"},
+                (Options_button){Quit, "Quit\n"}
+            };
+            Options_menu main_menu = {
+                main_options,
+                0, 0, 6, 4
+            };
+            current = locator_menu(&main_menu);
+            break;
+        }
+        case Game:
+            current_score = 0;
+            if(AI_diff == None) current = solo_snake_game(Level_diff, &current_score);
+            else; //ai_snake_game();
+            break;
+        case End_options:{
+            Options_button *end_options;
+            Options_menu end_menu;
+            int score_pos = top_score(&score_board, current_score);
+            if(score_pos != -1){
+                end_options = (Options_button[]){
+                    (Options_button){Name_input, "SAVE SCORE\n"},
+                    (Options_button){Game, "RETRY\n"},
+                    (Options_button){Main, "BACK TO MENU\n"}
+                };
+                Options_menu end_menu = {
+                    end_options,
+                    0, 0, 3, 3
+                };
+                write_row(0, "GAME OVER");
+                current = locator_menu(&end_menu);
+            }
+            else{
+                end_options = (Options_button[]){
+                    (Options_button){Game, "RETRY\n"},
+                    (Options_button){Main, "BACK TO MENU\n"}
+                };
+                Options_menu end_menu = {
+                    end_options,
+                    0, 0, 2, 3
+                };
+                write_row(0, "GAME OVER");
+                current = locator_menu(&end_menu);  
+            }
+            break;
+        }
+        case Name_input:{
+            //char name[MAX_NAME_LEN + 1];
+            Score score;
+            score.score = current_score;
+            score.name[MAX_NAME_LEN] = 0;
+            current = name_input(score.name);
+            /*while (1)
+            {
+                write_row(1, name);
+                update_disp(); 
+            }*/
+            //char displays[16];
+            //Score score = {(char *)name, current_score};
+            insert_score(&score_board, &score);
+            
+            break;
+        }
+        case Score_board:
+            current = Score_board_menu(&score_board);
+            break;
+        case Leveld: 
+            
+            break;
+        case AId:
+            
+            break;
+        case Quit:
+            clear_screen();
+            return 0;
+            break;
+        default:
+            break;
+        }
+    }
+
+    /*
+    int i;
+    int a = 32;
+    int b = 23;
+    int x = a + b;
+    char ch[16];
+    for(i = 0; i < 16; ++i) ch[i] = ' ';
+    char ch1;
+    char *chr = itoaconv(x);  
+    for(i = 0; chr[i] != '\0'; ++i) ch[13 + i] = chr[i];
+    ch1 = chr[3 ] == '\0' ? 'n' : 'i';
+    write_row(0, ch);
+    update_disp();
+    */
+
+
 
     /*uint8_t i;
     for( i = 0; i < 15; ++i){
@@ -78,7 +232,7 @@ int main(void){
     game_init();
     //while (1)
     //{
-        game_loop(tail_player, head_player, snakes, &food_pos);
+        solo_snake_game(tail_player, head_player, snakes, &food_pos);
     //}*/
     /*
     write_row(1, "abcdefghijk CAPS");
@@ -88,10 +242,22 @@ int main(void){
     //invert_char((Point){2, 0});
     //invert_row(3);
     update_disp();
-    */
-    char name[10];
-    game_state gs = name_input(name);
     
+    
+    /*char name[10];
+    game_state gs = name_input(name);*/
+    
+    /*
+    Options_button main_options[] = {
+                //casting to avoid "undefined reference to `memcpy'" - error
+                (Options_button){Game, "Play\n"},
+            };
+    Options_menu main_menu = {
+        main_options,
+        0, 0, 1, 3
+    };
+    locator_menu(&main_menu);
+    */
     return 0;
 }
 

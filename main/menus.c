@@ -82,7 +82,8 @@ char get_caps(button_type type, char ch){
 }
 int mod_sub(int left, int right, int len){
     int res = left - right;
-    if(res < 0) res = len - (abs(res) % len);
+    int diff = abs(res) % len;
+    if(res < 0) res = len - (diff == 0 ? len : diff);
     return res;
 }
 void draw_kb_button(uint8_t index, Keyboard_button const *keyboard, uint8_t len, uint8_t caps){
@@ -165,7 +166,7 @@ void options_page_scroll(direction dir, Options_menu *menu) {
             menu->index = mod_sub(menu->index, 1, menu->len);
             if(prev_page){
                 prev_page = 0;
-                if(menu->index == menu->len - 1 && menu->len % menu->page_len != 0){
+                if(menu->index == menu->len - 1 && menu->len % menu->page_len != 0) 
                     menu->start = menu->len - (menu->len % menu->page_len);
                 else menu->start = mod_sub(menu->start, menu->page_len, menu->len);
                 draw_options(menu);
@@ -219,6 +220,9 @@ game_state locator_menu(Options_menu * menu){
                 options_page_scroll(Down, menu);
                 update_options(menu);
             }
+            int len;
+            char* row_num = itoaconv(menu->index, &len);
+            write_char((Point){15, 0}, row_num[0]);
             update_disp(); 
         }
     }
@@ -279,7 +283,7 @@ game_state name_input(char *name){
                     switch (keyboard[index].type)
                     {
                     case Letter: 
-                        if(cursor_index < 10){
+                        if(cursor_index < MAX_NAME_LEN){
                             if(caps) ch = keyboard[index].text[0] - 32;    
                             else ch = keyboard[index].text[0];
                             name[cursor_index] = ch;
@@ -288,7 +292,7 @@ game_state name_input(char *name){
                         }
                         break;
                     case Number:
-                        if(cursor_index < 10){
+                        if(cursor_index < MAX_NAME_LEN){
                             if(caps) ch = keyboard[index].text[0] + 5;
                             else ch = keyboard[index].text[0];
                             name[cursor_index] = ch;
@@ -297,7 +301,7 @@ game_state name_input(char *name){
                         }
                         break;
                     case Space:
-                        if(cursor_index < 10){
+                        if(cursor_index < MAX_NAME_LEN){
                             name[cursor_index] = ' ';
                             write_char((Point){cursor_index, 0}, ' ');
                             cursor_index++;
@@ -328,7 +332,7 @@ game_state name_input(char *name){
                             //casting to avoid "undefined reference to `memcpy'" - error
                             (Options_button){Cancel, "1: CANCEL\n"},
                             (Options_button){Game, "2: RETRY\n"},
-                            (Options_button){Options, "3: BACK TO MENU\n"},
+                            (Options_button){Main, "3: BACK TO MENU\n"},
                         };
                         Options_menu menu = {
                             options,
@@ -344,6 +348,7 @@ game_state name_input(char *name){
                             write_string(0, name, cursor_index);
                             break;
                         default:
+                            name[cursor_index] = 0;
                             return ret;
                         }
                         break;
@@ -381,4 +386,82 @@ game_state name_input(char *name){
             update_disp(); 
         }
     }
+}
+
+int top_score(Sboard const *board, int score) {
+  int i;
+  for(i = 0; i < board->max_len; i++) 
+    if(board->board[i].score <= score || i == board->len) 
+        return i;
+  
+  return -1;
+}
+
+void assign_string(char *left, char const *right, uint8_t keep_end){
+    int i;
+    for(i = 0; right[i] != 0; ++i){
+        left[i] = right[i];
+    }
+    if(keep_end) left[i] = 0;
+}
+void fill_string(char ch, char *str, int len){
+    int i;
+    for(i = 0; i < len; ++i) str[i] = ch;
+}
+
+void insert_score(Sboard *board, Score const *score){
+  int i;
+  int pos = top_score(board, score->score);
+  if(pos == -1) return;
+  if(board->len < board->max_len) board->len += 1;
+  for(i = board->len - 1; i > pos; --i){
+    board->board[i].score = board->board[i - 1].score;    
+    assign_string(board->board[i].name, board->board[i - 1].name, 1);
+    assign_string(board->board[i].disp_stirng, board->board[i - 1].disp_stirng, 1);
+  }
+
+  board->board[pos].score = score->score;
+  assign_string(board->board[pos].name, score->name, 1);
+  fill_string(' ', board->board[pos].disp_stirng, CHAR_ROW_SIZE);
+  assign_string(board->board[pos].disp_stirng, score->name, 0);
+  int num_len;
+  char *number = itoaconv(score->score, &num_len);
+  assign_string(board->board[pos].disp_stirng + (CHAR_ROW_SIZE - num_len), number, 1);
+}
+
+game_state Score_board_menu(Sboard const *board){
+    if(board->len == 0){
+        //clear_screen();
+        //write_row(1, "NO SAVED SCORES");
+        //update_disp();
+        
+        int btn;
+        int update_counter = 0;
+        while (1){
+            int inter_flag = (IFS(0) & 0x100) >> 8;
+            btn = getbtns();
+            if(inter_flag){
+                IFS(0) &= (unsigned int)(~0x100);
+                ++update_counter;
+            }
+            if(update_counter == 10){
+                update_counter = 0;
+                if(btn) {
+                    clear_screen();
+                    return Main;
+                }
+            }
+        }
+    }
+    int i;
+    Options_button scores[board->len];
+    for(i = 0; i < board->len; ++i){
+        scores[i] = (Options_button){Main, board->board[i].disp_stirng};
+    }
+    Options_menu menu = {
+        scores,
+        0, 0, board->len, 3
+    };
+    write_row(0, "BTN4/3 = Back");
+    return locator_menu(&menu);
 }

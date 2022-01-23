@@ -105,13 +105,22 @@ uint8_t qpop(Dir_queue *queue){
   return ret;
 }
 /* This function is called repetitively from the main program */
-game_state game_loop(Point *tail, Point *head, uint16_t *snakes, Point *food_pos ){
+game_state solo_snake_game(difficulty level_diff, int *current_score){
+  uint16_t snakes[128*4];
+  Point head[SEGMENT_SIZE];
+  Point tail[SEGMENT_SIZE];
+
+  tail[0] = (Point){0, 31};
+  Point food_pos = {63, 15};
+  spawn_snake(tail, head, 10, Right, snakes);
+
+
   int update_counter = 0;
   direction queue[SEGMENT_SIZE];
   Dir_queue dir_buffer = {SEGMENT_SIZE, -1, queue};
 
   uint8_t frame_update = 0;
-  toggle_food(On, food_pos);
+  toggle_food(On, &food_pos);
   uint8_t grow_player = 0;
   uint16_t rand_count = 0;  
   /* Declaring the volatile pointer porte*/
@@ -159,10 +168,13 @@ game_state game_loop(Point *tail, Point *head, uint16_t *snakes, Point *food_pos
         //tick( &mytime );
         /* Increment the pointer as the count goes */
         *porte+=1;
-        snake_state sstate = move_snake(head, tail, food_pos, snakes, &grow_player);
+        snake_state sstate = update_snake(head, tail, &food_pos, snakes, &grow_player);
         int i;
         switch (sstate)
         {
+          case Ate:
+            *current_score += level_diff + 1;
+          break;
           case Full:
             clear_screen();
             for(i = 0; i < 128; ++i) set_pixel((Point){i, 0}, 1);
@@ -172,27 +184,17 @@ game_state game_loop(Point *tail, Point *head, uint16_t *snakes, Point *food_pos
           
           case Dead:
           {
-            clear_screen();
-            Options_button options[] = {
-              //casting to avoid "undefined reference to `memcpy'" - error
-              (Options_button){Cancel, "1: CANCEL\n"},
-              (Options_button){Game, "2: RETRY\n"},
-              (Options_button){Options, "3: BACK TO MENU\n"},
-            };
-          Options_menu menu = {
-              options,
-              0, 0, 3
-          };
-            for(i = 0; i < 128; ++i) set_pixel((Point){i, 31}, 1);
-            update_disp(); 
-            return;
-            break;
+            return End_options;
           }
           default:
             break;
         }
+        int len;
+        char* row_num = itoaconv(*current_score, &len);
+        write_char((Point){15, 0}, row_num[0]);
         update_disp(); 
         frame_update++;
     }
   }
 }
+

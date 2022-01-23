@@ -3,6 +3,7 @@
 #include <pic32mx.h>  /* Declarations of system-specific addresses etc */ 
 
 extern uint8_t SCREEN[128*4];
+#define ROW_CHAR_LEN ( 16 )
 
 typedef enum pixel_status{Off, On} pixel_status;
 
@@ -26,7 +27,11 @@ void invert_row(uint8_t line);
 
 void write_string(uint8_t line, char const *str, uint8_t len);
 void invert_string(uint8_t line, uint8_t len);
-void num32asc( char * s, int n );
 
-void init_disp(void);
 void update_disp();
+
+
+//Copied from Lab 3
+void init_disp(void);
+void num32asc( char * s, int n );
+char * itoaconv( int num, int *len);

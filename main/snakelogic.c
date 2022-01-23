@@ -261,11 +261,13 @@ Point prand(Point *tail, Point *head){
     return ret;
 }
 
-snake_state move_snake(Point *head, Point *tail, Point *food_pos, uint16_t *snakes, uint8_t *grow){
+snake_state update_snake(Point *head, Point *tail, Point *food_pos, uint16_t *snakes, uint8_t *grow){
     int i;
+    snake_state ret = Alive;
     direction head_dir = get_unit(*head, snakes);
     move_segment(get_unit(*head, snakes), head, 1);
     if(eat_check(head, food_pos)){ 
+        ret = Ate;
         *grow += SEGMENT_SIZE;
         toggle_food(Off, food_pos);
         if(update_food(prand(tail, head), food_pos)) return Full;
@@ -277,7 +279,7 @@ snake_state move_snake(Point *head, Point *tail, Point *food_pos, uint16_t *snak
         *grow = *grow - 1;
         toggle_segment(head, On);
         update_segment(head, head_dir, snakes); 
-        return 0;
+        return ret;
     }
 
     toggle_segment(tail, Off);
@@ -304,7 +306,7 @@ snake_state move_snake(Point *head, Point *tail, Point *food_pos, uint16_t *snak
         move_segment(prev_tail_dir, tail, SEGMENT_SIZE - 1);
         rotate_segment(prev_tail_dir, cur_tail_dir, tail);
     }*/
-    return Alive;
+    return ret;
 }
 
 

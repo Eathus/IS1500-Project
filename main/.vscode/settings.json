@@ -2,6 +2,7 @@
     "files.associations": {
         "u32graphics.h": "c",
         "pic32mx.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "math.h": "c"
     }
 }

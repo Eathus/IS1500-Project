@@ -5,9 +5,9 @@
 #include "u32graphics.h"
 #include "menus.h"
 
-typedef enum difficulty{Easy, Normal, Hard} difficulty;
+typedef enum difficulty{None, Easy, Normal, Hard} difficulty;
 
 void game_init( void );
 
 /* This function is called repetitively from the main program */
-game_state game_loop(Point *tail, Point *head, uint16_t *snakes, Point *food_pos);
+game_state solo_snake_game(difficulty level_diff, int *current_score);
