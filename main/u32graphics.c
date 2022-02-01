@@ -6,6 +6,7 @@
 #define STRIPE_ROWS 4
 #define SCREEN_LEN 128 * 4
 
+//defines copied from lab 3
 #define DISPLAY_CHANGE_TO_COMMAND_MODE (PORTFCLR = 0x10)
 #define DISPLAY_CHANGE_TO_DATA_MODE (PORTFSET = 0x10)
 
@@ -19,6 +20,7 @@
 #define DISPLAY_TURN_OFF_VBAT (PORTFSET = 0x20)
 
 uint8_t SCREEN[128*4];
+
 
 //matrix for SCREEN in column major; stored as a unsigned char array
 
@@ -139,6 +141,42 @@ void invert_string(uint8_t line, uint8_t len){
 		invert_char((Point){i, line});
 	}
 }
+
+Point normalize(uint8_t width, uint8_t height, Point coords){
+	return (Point){coords.x % width, coords.y % height};
+}
+uint8_t get_image_pixel(Point coords, const Image *image){
+	Point normalized = normalize(image->width, image->height, coords);
+	int index = 
+		image->width * (normalized.y / STRIPE_BIT_LEN) + 
+		(normalized.x % image->width);
+	return (image->image[index] >> normalized.y % STRIPE_BIT_LEN) & 0x1;
+}
+
+void draw_image(const Image *image){
+	int i, j;
+	for (i = 0; i < image->height; ++i){
+		for (j = 0; j < image->width; ++j){
+			Point normalized = 
+				{((int)image->pos.x + j) % 128, ((int)image->pos.y + i) % 32};
+			set_pixel(normalized, get_image_pixel((Point){j, i}, image));
+		}
+	}
+}
+
+void draw_foreground(const Image *image, uint8_t forground_mode){
+	int i, j;
+	forground_mode %= 2;
+	for (i = 0; i < image->height; ++i){
+		for (j = 0; j < image->width; ++j){
+			Point normalized =
+				{((int)image->pos.x + j) % 128, ((int)image->pos.y + i) % 32};
+			uint8_t pixel = get_image_pixel((Point){j, i}, image);
+			if(pixel == forground_mode) set_pixel(normalized, pixel);
+		}
+	}
+}
+
 
 void update_disp(){
     uint8_t i, j;

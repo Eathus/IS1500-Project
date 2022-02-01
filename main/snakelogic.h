@@ -40,3 +40,9 @@ void change_dir(direction dir, Point *head, uint16_t *snakes);
 void spawn_snake(Point *tail, Point *head, uint8_t len, direction dir, uint16_t *snakes);
 
 void toggle_food(pixel_status stat, Point const *food_pos);
+
+uint8_t update_food(Point coordinate, Point *food_pos);
+
+Point prand(Point *tail, Point *head);
+
+direction snake_ai(Point *head, Point food_pos, uint16_t* snakes);

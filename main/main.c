@@ -92,6 +92,10 @@ int main(void){
 */
     difficulty Level_diff = None;
     difficulty AI_diff = None;
+    int cs = 0;
+    ai_snake_game(None, &cs);
+    return 0;
+
     while (1){
         int len;
         char* row_num = itoaconv(current, &len);

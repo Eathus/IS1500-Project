@@ -11,6 +11,13 @@ typedef struct Point {
     uint8_t x, y;
 } Point;
 
+typedef struct Image{
+	Point pos; //where the top left pixel is
+	uint8_t width;
+	uint8_t height;
+	uint8_t *image; 
+} Image;
+
 void clear_screen();
 
 uint8_t get_stripe(Point coordinates);

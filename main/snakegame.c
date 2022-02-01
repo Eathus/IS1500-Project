@@ -173,6 +173,9 @@ game_state solo_snake_game(difficulty level_diff, int *current_score){
         switch (sstate)
         {
           case Ate:
+            if(update_food(prand(tail, head), &food_pos)) return Full;
+            //if(update_food((Point){(HEAD_PLAYER[0].x + 5) %128, HEAD_PLAYER[0].y})) return Full;
+            toggle_food(On, &food_pos);
             *current_score += level_diff + 1;
           break;
           case Full:
@@ -198,3 +201,139 @@ game_state solo_snake_game(difficulty level_diff, int *current_score){
   }
 }
 
+
+
+
+game_state ai_snake_game(difficulty level_diff, int *current_score){
+  uint16_t snakes[128*4];
+  Point head[SEGMENT_SIZE];
+  Point tail[SEGMENT_SIZE];
+
+  tail[0] = (Point){0, 31};
+  Point food_pos = {63, 15};
+  spawn_snake(tail, head, 10, Right, snakes);
+
+
+  int update_counter = 0;
+  direction queue[SEGMENT_SIZE];
+  Dir_queue dir_buffer = {SEGMENT_SIZE, -1, queue};
+
+  uint8_t frame_update = 0;
+  toggle_food(On, &food_pos);
+  uint8_t grow_player = 0;
+  uint8_t grow_ai = 0;
+  uint16_t rand_count = 0;  
+  /* Declaring the volatile pointer porte*/
+  volatile int* porte = (volatile int*) 0xbf886110;
+  /* Initialize as 0 */
+  *porte = 0;
+  /* Variables to handle input */
+  int btn;
+
+  while (1)
+  {
+    int inter_flag = (IFS(0) & 0x100) >> 8;
+    btn = getbtns();
+    if(inter_flag){
+        IFS(0) &= (unsigned int)(~0x100);
+        ++update_counter;
+    }   
+    if(update_counter == 1){
+      update_counter = 0;
+      direction ai_dir = snake_ai(head, food_pos, snakes);
+      qpush(ai_dir, &dir_buffer, 1);
+      if(frame_update == SEGMENT_SIZE){
+        uint8_t dir_change = qpop(&dir_buffer);
+        if(dir_change != -1) change_dir(dir_change, head, snakes);
+        frame_update = 0;
+      }
+      snake_state ai_state = update_snake(head, tail, &food_pos, snakes, &grow_ai);
+      switch (ai_state)
+      {
+      case Dead: case Full:
+        return;
+        break;
+      case Ate:
+        if(update_food(prand(tail, head), &food_pos)) return Full;
+        //if(update_food((Point){(HEAD_PLAYER[0].x + 5) %128, HEAD_PLAYER[0].y})) return Full;
+        toggle_food(On, &food_pos);
+        break;
+      default:
+        break;
+      }
+
+      update_disp(); 
+      frame_update++;
+    }
+  }
+  
+  /*
+  while (1){
+    int inter_flag = (IFS(0) & 0x100) >> 8;
+    btn = getbtns();
+    if(inter_flag){
+        IFS(0) &= (unsigned int)(~0x100);
+        ++update_counter;
+    }   
+    if(update_counter == 5){
+        update_counter = 0;
+        //Update input 
+
+        //All of these are if statements since they can all be updated at once- not exclusive.
+        //BTN4 - AND with corresponding bit
+        if (btn & 0x8) {
+          qpush(Left, &dir_buffer, 1);
+        } 
+        // BTN3 - AND with corresponding bit
+        else if (btn & 0x4) {
+          qpush(Right, &dir_buffer, 1);
+        }
+        // BTN2 - AND with corresponding bit
+        else if(btn & 0x2) {
+          qpush(Up, &dir_buffer, 1);
+        }
+        // BTN1 - AND with corresponding bit
+        else if (btn & 0x1) {
+          qpush(Down, &dir_buffer, 1);
+        }
+        if(frame_update == SEGMENT_SIZE){
+          uint8_t dir_change = qpop(&dir_buffer);
+          if(dir_change != -1) change_dir(dir_change, head, snakes);
+          frame_update = 0;
+        }
+        //update_disp();
+        //tick( &mytime );
+        *porte+=1;
+        snake_state sstate = update_snake(head, tail, &food_pos, snakes, &grow_player);
+        int i;
+        switch (sstate)
+        {
+          case Ate:
+            if(update_food(prand(tail, head), &food_pos)) return Full;
+            //if(update_food((Point){(HEAD_PLAYER[0].x + 5) %128, HEAD_PLAYER[0].y})) return Full;
+            toggle_food(On, &food_pos);
+            *current_score += level_diff + 1;
+          break;
+          case Full:
+            clear_screen();
+            for(i = 0; i < 128; ++i) set_pixel((Point){i, 0}, 1);
+            update_disp(); 
+            return;
+            break;
+          
+          case Dead:
+          {
+            return End_options;
+          }
+          default:
+            break;
+        }
+        int len;
+        char* row_num = itoaconv(*current_score, &len);
+        write_char((Point){15, 0}, row_num[0]);
+        update_disp(); 
+        frame_update++;
+    }
+  }
+  */
+}
