@@ -240,7 +240,7 @@ game_state ai_snake_game(difficulty level_diff, int *current_score){
     }   
     if(update_counter == 1){
       update_counter = 0;
-      direction ai_dir = snake_ai(head, food_pos, snakes);
+      direction ai_dir = snake_ai(head, tail, food_pos, snakes);
       qpush(ai_dir, &dir_buffer, 1);
       if(frame_update == SEGMENT_SIZE){
         uint8_t dir_change = qpop(&dir_buffer);
