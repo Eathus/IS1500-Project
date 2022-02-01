@@ -395,7 +395,7 @@ int obstacle_distance(direction dir, const Point* head, const Point* tail, Point
     switch (dir)
     {
     case Right:{
-        for(i = 0; i < check_dist; ++i){
+        for(i = 0; i < check_dist % 128; ++i){
             for(j = 0; j < SEGMENT_SIZE; ++j){
                 Point current = {(head[j].x + i + 1) % 128, head[j].y};
                 if(is_food(current, food_pos))
@@ -413,7 +413,7 @@ int obstacle_distance(direction dir, const Point* head, const Point* tail, Point
         break;
     }
     case Left:{
-        for(i = 0; i < check_dist; ++i){
+        for(i = 0; i < check_dist % 128; ++i){
             for(j = 0; j < SEGMENT_SIZE; ++j){
                 Point current = {(uint8_t)(head[j].x - i - 1) % 128, head[j].y};
                 if(is_food(current, food_pos))
@@ -431,7 +431,7 @@ int obstacle_distance(direction dir, const Point* head, const Point* tail, Point
         break;
     }
     case Up:{
-        for(i = 0; i < check_dist; ++i){
+        for(i = 0; i < check_dist % 32; ++i){
             for(j = 0; j < SEGMENT_SIZE; ++j){
                 Point current = {head[j].x, (uint8_t)(head[j].y - i - 1) % 32};
                 if(is_food(current, food_pos))
@@ -449,7 +449,7 @@ int obstacle_distance(direction dir, const Point* head, const Point* tail, Point
         break;
     }
     case Down:{
-        for(i = 0; i < check_dist; ++i){
+        for(i = 0; i < check_dist % 32; ++i){
             for(j = 0; j < SEGMENT_SIZE; ++j){
                 Point current = {head[j].x, (head[j].y + i + 1) % 32};
                 if(is_food(current, food_pos))
