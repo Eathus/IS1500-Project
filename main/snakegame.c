@@ -209,11 +209,27 @@ game_state ai_snake_game(difficulty level_diff, int *current_score){
   Point head[SEGMENT_SIZE];
   Point tail[SEGMENT_SIZE];
 
-  tail[0] = (Point){0, 31};
-  Point food_pos = {63, 15};
-  spawn_snake(tail, head, 10, Right, snakes);
+  tail[0] = (Point){128, 14};
+  Point food_pos = {61, 14};
+  spawn_snake(tail, head, 10, Left, snakes);
+  int i, j;
+  /*
+  for(i = 0; i < 23; ++i){
+    for(j = 0; j < 25; ++j){
+      set_pixel((Point){j + 51, i + 5}, On);
+    }
+  }
+  for(i = 0; i < 21; ++i){
+    for(j = 0; j < 23; ++j){
+      set_pixel((Point){j + 52, i + 6}, Off);
+    }
+  }
 
-
+  set_pixel((Point){24 + 51, 12 + 6}, Off);
+  set_pixel((Point){24 + 51, 13 + 6}, Off);
+  set_pixel((Point){24 + 51, 14 + 6}, Off);
+  set_pixel((Point){24 + 51, 15 + 6}, Off);
+  */
   int update_counter = 0;
   direction queue[SEGMENT_SIZE];
   Dir_queue dir_buffer = {SEGMENT_SIZE, -1, queue};

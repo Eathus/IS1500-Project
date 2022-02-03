@@ -364,14 +364,14 @@ void swap(Distance *right, Distance *left){
 }
 
 void dist_fsort(Distance *dists, int len){
-    int i, j, select = 0;
+    int i, j;
     for(i = 1; i < len; ++i){
         for (j = i; 0 < j && dists[j].food_dist < dists[j - 1].food_dist; --j)
             swap(dists + j, dists + j - 1);
     }
 }
 void dist_osort(Distance *dists, int len){
-    int i, j, select = 0;
+    int i, j;
     for(i = 1; i < len; ++i){
         for (j = i; 0 < j &&  dists[j - 1].obstical_dist < dists[j].obstical_dist; --j)
             swap(dists + j, dists + j - 1);
@@ -386,7 +386,7 @@ uint8_t is_segment(Point pos, const Point *segment){
     return 0;
 }
 
-int obstacle_distance(direction dir, const Point* head, const Point* tail, Point food_pos, uint16_t *snakes, int check_dist){
+int obstacle_distance(direction dir, const Point* head, const Point* tail, Point food_pos, uint16_t *snakes, int check_dist, int distance){
     int i;
     int j;
     uint8_t food = 0;
@@ -395,17 +395,17 @@ int obstacle_distance(direction dir, const Point* head, const Point* tail, Point
     switch (dir)
     {
     case Right:{
-        for(i = 0; i < check_dist % 128; ++i){
+        for(i = 1; i < 129; ++i){
             for(j = 0; j < SEGMENT_SIZE; ++j){
-                Point current = {(head[j].x + i + 1) % 128, head[j].y};
+                Point current = {(head[j].x + i) % 128, head[j].y};
                 if(is_food(current, food_pos))
                     food = 1;
                 else if(is_segment(current, tail) && get_unit(*tail, snakes) == Right)
                     loop = 1;
                 else{ 
                     if(get_pixel(current))
-                        return i + 1;
-                    else if(current.x == food_pos.x || current.x == food_pos.x + 1) passed = 1;
+                        return i;
+                    else if(distance + (SEGMENT_SIZE - 1) < i) passed = 1;
                 }
             }
             if(food || passed || loop) return 255;
@@ -413,17 +413,17 @@ int obstacle_distance(direction dir, const Point* head, const Point* tail, Point
         break;
     }
     case Left:{
-        for(i = 0; i < check_dist % 128; ++i){
+        for(i = 1; i < 129; ++i){
             for(j = 0; j < SEGMENT_SIZE; ++j){
-                Point current = {(uint8_t)(head[j].x - i - 1) % 128, head[j].y};
+                Point current = {(uint8_t)(head[j].x - i) % 128, head[j].y};
                 if(is_food(current, food_pos))
                     food = 1;
                 else if(is_segment(current, tail) && get_unit(*tail, snakes) == Left)
                     loop = 1;
                 else{ 
                     if(get_pixel(current))
-                        return i + 1;
-                    else if(current.x == food_pos.x || current.x == food_pos.x + 1) passed = 1;
+                        return i;
+                    else if(distance + (SEGMENT_SIZE - 1) < i) passed = 1;
                 }
             }
             if(food || passed || loop) return 255;
@@ -431,17 +431,17 @@ int obstacle_distance(direction dir, const Point* head, const Point* tail, Point
         break;
     }
     case Up:{
-        for(i = 0; i < check_dist % 32; ++i){
+        for(i = 1; i < 33; ++i){
             for(j = 0; j < SEGMENT_SIZE; ++j){
-                Point current = {head[j].x, (uint8_t)(head[j].y - i - 1) % 32};
+                Point current = {head[j].x, (uint8_t)(head[j].y - i) % 32};
                 if(is_food(current, food_pos))
                     food = 1;
                 else if(is_segment(current, tail) && get_unit(*tail, snakes) == Up)
                     loop = 1;
                 else{ 
                     if(get_pixel(current))
-                        return i + 1;
-                    else if(current.y == food_pos.y || current.y == food_pos.y + 1) passed = 1;
+                        return i;
+                    else if(distance + (SEGMENT_SIZE - 1) < i) passed = 1;
                 }
             }
             if(food || passed || loop) return 255;
@@ -449,17 +449,17 @@ int obstacle_distance(direction dir, const Point* head, const Point* tail, Point
         break;
     }
     case Down:{
-        for(i = 0; i < check_dist % 32; ++i){
+        for(i = 1; i < 33; ++i){
             for(j = 0; j < SEGMENT_SIZE; ++j){
-                Point current = {head[j].x, (head[j].y + i + 1) % 32};
+                Point current = {head[j].x, (head[j].y + i) % 32};
                 if(is_food(current, food_pos))
                     food = 1;
                 else if(is_segment(current, tail) && get_unit(*tail, snakes) == Down)
                     loop = 1;
                 else{ 
                     if(get_pixel(current))
-                        return i + 1;
-                    else if(current.y == food_pos.y || current.y == food_pos.y + 1) passed = 1;
+                        return i;
+                    else if(distance + (SEGMENT_SIZE - 1) < i) passed = 1;
                 }
             }
             if(food || passed || loop) return 255;
@@ -536,17 +536,17 @@ direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes){
         }
         else if(food_pos.y < head->y){
             dir_dists[0] = (Distance){Down, food_pos.y + (32 - head[SEGMENT_SIZE - 1].y)};
-            dir_dists[1] = (Distance){Up, head->y - food_pos.y};
+            dir_dists[1] = (Distance){Up, head->y - food_pos.y - (SEGMENT_SIZE - 1)};
         }
         else{
-            dir_dists[0] = (Distance){Up, head->y + (32 - food_pos.y)};
+            dir_dists[0] = (Distance){Up, head->y + (32 - food_pos.y - (SEGMENT_SIZE - 1))};
             dir_dists[1] = (Distance){Down, food_pos.y - head[SEGMENT_SIZE - 1].y};
         }
         if(arrived_x) dir_dists[2] = (Distance){Left, 255};
         else if(food_pos.x < head->x)
-            dir_dists[2] = (Distance){Left, head->x - food_pos.x};
+            dir_dists[2] = (Distance){Left, head->x - food_pos.x - (SEGMENT_SIZE - 1)};
         else
-            dir_dists[2] = (Distance){Left, head->x + (128 - food_pos.x)};
+            dir_dists[2] = (Distance){Left, head->x + (128 - food_pos.x) - (SEGMENT_SIZE - 1)};
         break;
         
     }
@@ -557,10 +557,10 @@ direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes){
         }
         else if(food_pos.y < head->y){
             dir_dists[0] = (Distance){Down, food_pos.y + (32 - head[SEGMENT_SIZE - 1].y)};
-            dir_dists[1] = (Distance){Up, head->y - food_pos.y};
+            dir_dists[1] = (Distance){Up, head->y - food_pos.y - (SEGMENT_SIZE - 1)};
         }
         else{
-            dir_dists[0] = (Distance){Up, head->y + (32 - food_pos.y)};
+            dir_dists[0] = (Distance){Up, head->y + (32 - food_pos.y - (SEGMENT_SIZE - 1))};
             dir_dists[1] = (Distance){Down, food_pos.y - head[SEGMENT_SIZE - 1].y};
         }
         if(arrived_x) dir_dists[2] = (Distance){Right, 255};
@@ -577,17 +577,17 @@ direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes){
         }
         else if(food_pos.x < head->x){
             dir_dists[0] = (Distance){Right, food_pos.x + (128 - head[SEGMENT_SIZE - 1].x)};
-            dir_dists[1] = (Distance){Left, head->x - food_pos.x};
+            dir_dists[1] = (Distance){Left, head->x - food_pos.x - (SEGMENT_SIZE - 1)};
         }
         else{
-            dir_dists[0] = (Distance){Left, head->x + (128 - food_pos.x)};
+            dir_dists[0] = (Distance){Left, head->x + (128 - food_pos.x) - (SEGMENT_SIZE - 1)};
             dir_dists[1] = (Distance){Right, food_pos.x - head[SEGMENT_SIZE - 1].x};
         }
         if(arrived_y) dir_dists[2] = (Distance){Up, 255};
         else if(food_pos.y < head->y)
-            dir_dists[2] = (Distance){Up, food_pos.y - head->y};
+            dir_dists[2] = (Distance){Up, food_pos.y - head->y - (SEGMENT_SIZE - 1)};
         else
-            dir_dists[2] = (Distance){Up, food_pos.y + (32 - head->y)};
+            dir_dists[2] = (Distance){Up, food_pos.y + (32 - head->y) - (SEGMENT_SIZE - 1)};
         break; 
     }
     case Down:{
@@ -597,10 +597,10 @@ direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes){
         }
         else if(food_pos.x < head->x){
             dir_dists[0] = (Distance){Right, food_pos.x + (128 - head[SEGMENT_SIZE - 1].x)};
-            dir_dists[1] = (Distance){Left, head->x - food_pos.x};
+            dir_dists[1] = (Distance){Left, head->x - food_pos.x - (SEGMENT_SIZE - 1)};
         }
         else{
-            dir_dists[0] = (Distance){Left, head->x + (128 - food_pos.x)};
+            dir_dists[0] = (Distance){Left, head->x + (128 - food_pos.x) - (SEGMENT_SIZE - 1)};
             dir_dists[1] = (Distance){Right, food_pos.x - head[SEGMENT_SIZE - 1].x};
         }
         if(arrived_y) dir_dists[2] = (Distance){Down, 255};
@@ -617,7 +617,7 @@ direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes){
     for(i = 0; i < 3; ++i){
         Point ret[SEGMENT_SIZE];
         get_rotated(ori_dir, dir_dists[i].dir, head, ret);
-        dir_dists[i].obstical_dist = obstacle_distance(dir_dists[i].dir, ret, tail, food_pos, snakes, 127);
+        dir_dists[i].obstical_dist = obstacle_distance(dir_dists[i].dir, ret, tail, food_pos, snakes, 127, dir_dists[i].food_dist);
         /*
         int len;
         char* row_num = itoaconv(dir_dists[i].dir, &len);
