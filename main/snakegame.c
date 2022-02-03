@@ -214,7 +214,7 @@ game_state ai_snake_game(difficulty level_diff, int *current_score){
   Point food_pos = {61, 14};
   spawn_snake(tail, head, 10, Left, snakes);
   int i, j;
- 
+  /*
   for(i = 0; i < 9; ++i){
     for(j = 0; j < 9; ++j){
       set_pixel((Point){j + 51, i + 5}, On);
@@ -236,6 +236,7 @@ game_state ai_snake_game(difficulty level_diff, int *current_score){
       set_pixel((Point){j + 67, i + 20}, On);
     }
   }
+  */
   int update_counter = 0;
   direction queue[SEGMENT_SIZE];
   Dir_queue dir_buffer = {SEGMENT_SIZE, -1, queue};
@@ -245,10 +246,12 @@ game_state ai_snake_game(difficulty level_diff, int *current_score){
   uint8_t grow_player = 0;
   uint8_t grow_ai = 0;
   uint16_t rand_count = 0;  
+  int ai_counter = 0;
+  uint8_t ai_switch = 0;
   /* Declaring the volatile pointer porte*/
   volatile int* porte = (volatile int*) 0xbf886110;
   /* Initialize as 0 */
-  *porte = 0;
+  *porte = 1;
   /* Variables to handle input */
   int btn;
 
@@ -263,7 +266,12 @@ game_state ai_snake_game(difficulty level_diff, int *current_score){
     if(update_counter == 1){
       update_counter = 0;
       if(frame_update == SEGMENT_SIZE){
-        direction ai_dir = snake_ai(head, tail, food_pos, snakes);
+        /*if(ai_counter == 1000){
+          ai_counter = 0;
+          ai_switch = ai_switch == 0 ? 1 : 0;
+        }*/
+        direction ai_dir = snake_ai(head, tail, food_pos, snakes, ai_switch);
+        ++ai_counter;
         qpush(ai_dir, &dir_buffer, 1);
         uint8_t dir_change = qpop(&dir_buffer);
         if(dir_change != -1) change_dir(dir_change, head, snakes);

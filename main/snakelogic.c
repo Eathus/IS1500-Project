@@ -496,7 +496,7 @@ int obstacle_distance(direction dir, const Point* head, const Point* tail, Point
     write_char((Point){15, 0}, row_num[2]);*/
     return 255;
 }
-direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes){
+direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes, uint8_t clo){
     direction ret;
     Distance dir_dists[3];
     
@@ -615,13 +615,15 @@ direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes){
         }*/
         
 
-        if(dir_dists[i].obstical_dist == 255) return dir_dists[i].dir;
+        if(!clo && dir_dists[i].obstical_dist == 255) return dir_dists[i].dir;
     }
     //for(i = 0; i < 3; ++i) if(dir_dists[i].obstical_dist > 2) return dir_dists[i].dir;
+    if(clo){
+        for(i = 0; i < 3; ++i){
+            if(dir_dists[i].obstical_dist > 0) return dir_dists[i].dir;
+        }
+    }
     dist_osort(dir_dists, 3);
-    /*for(i = 2; i >= 0; --i){
-        if(dir_dists[i].obstical_dist > 2) return dir_dists[i].dir;
-    }*/
     return dir_dists[0].dir;
 }
 

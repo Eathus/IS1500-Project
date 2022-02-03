@@ -45,4 +45,4 @@ uint8_t update_food(Point coordinate, Point *food_pos);
 
 Point prand(Point *tail, Point *head);
 
-direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes);
+direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes, uint8_t clo);
