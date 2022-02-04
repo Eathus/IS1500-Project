@@ -618,11 +618,11 @@ direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes, u
         if(!clo && dir_dists[i].obstical_dist == 255) return dir_dists[i].dir;
     }
     //for(i = 0; i < 3; ++i) if(dir_dists[i].obstical_dist > 2) return dir_dists[i].dir;
-    if(clo){
+    /*if(clo){
         for(i = 0; i < 3; ++i){
             if(dir_dists[i].obstical_dist > 0) return dir_dists[i].dir;
         }
-    }
+    }*/
     dist_osort(dir_dists, 3);
     return dir_dists[0].dir;
 }
