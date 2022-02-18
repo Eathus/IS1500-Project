@@ -70,9 +70,9 @@ void set_segment(Point *left, Point *right){
     for(i = 0; i < SEGMENT_SIZE; ++i) left[i] = right[i];
 }
 
-void toggle_segment(Point *segment, pixel_status stat){
+void toggle_segment(uint8_t *frame, Point *segment, pixel_status stat){
     int i;
-    for(i = 0; i < SEGMENT_SIZE; ++i) set_pixel(segment[i], stat);
+    for(i = 0; i < SEGMENT_SIZE; ++i) set_pixel(frame, segment[i], stat);
 }
 void update_segment(Point *segment, direction dir, uint16_t *snakes){
     int i;
@@ -104,17 +104,17 @@ uint8_t eat_check(Point *head, Point const *food_pos){
     }   
     return 0;
 }
-void toggle_food(pixel_status stat, Point const *food_pos){
+void toggle_food(uint8_t *frame, pixel_status stat, Point const *food_pos){
     int i, j;
     for(i = 0; i < SEGMENT_SIZE; ++i){
         for(j = 0; j < SEGMENT_SIZE; ++j){
             Point fpos = {(food_pos->x + j) %  STRIPE_COLS, (food_pos->y + i) % ROWS};
-            set_pixel(fpos, stat);
+            set_pixel(frame, fpos, stat);
         }
     }   
 }
 
-uint8_t update_food(Point coordinate, Point *food_pos){
+uint8_t update_food(uint8_t *frame, Point coordinate, Point *food_pos){
     Point original = coordinate;
     uint8_t cur_x = coordinate.x - coordinate.y;
     uint8_t max_x = STRIPE_COLS - SEGMENT_SIZE + 1;
@@ -126,7 +126,7 @@ uint8_t update_food(Point coordinate, Point *food_pos){
         for(i = 0; i < SEGMENT_SIZE; ++i){
             for(j = 0; j < SEGMENT_SIZE; ++j){
                 Point fpos = {(coordinate.x + j) % STRIPE_COLS, (coordinate.y + i) % ROWS};
-                if(get_pixel(fpos)){
+                if(get_pixel(frame, fpos)){
                     invalid_pos = 1;
                     break;
                 }
@@ -150,23 +150,23 @@ uint8_t update_food(Point coordinate, Point *food_pos){
     }
 }
 
-void eat(Point *head, Point *food_pos, uint16_t *snakes){
+void eat(Point *head, Point *food_pos, uint16_t *snakes, uint8_t *frame){
     int i, j;
     direction dir = get_unit(*head, snakes);
-    toggle_food(Off, food_pos);
+    toggle_food(frame, Off, food_pos);
     for(i = 1; i < SEGMENT_SIZE; ++i){
         update_segment(head, dir, snakes);
-        toggle_segment(head, On);
+        toggle_segment(frame, head, On);
         move_segment(get_unit(*head, snakes), head, 1);
     }
     update_segment(head, dir, snakes);
-    toggle_segment(head, On);
+    toggle_segment(frame, head, On);
 }
 
-uint8_t is_dead(const Point *head){ 
+uint8_t is_dead(const Point *head, uint8_t *frame){ 
     int i;
     for(i = 0; i < SEGMENT_SIZE; ++i){
-        if(get_pixel(head[i])) return 1;
+        if(get_pixel(frame, head[i])) return 1;
     }
     return 0;
 }
@@ -280,7 +280,7 @@ Point prand(Point *tail, Point *head){
     return ret;
 }
 
-snake_state update_snake(Point *head, Point *tail, Point *food_pos, uint16_t *snakes, uint8_t *grow){
+snake_state update_snake(Point *head, Point *tail, Point *food_pos, uint8_t *grow, uint16_t *snakes, uint8_t *frame){
     int i;
     snake_state ret = Alive;
     direction head_dir = get_unit(*head, snakes);
@@ -288,18 +288,18 @@ snake_state update_snake(Point *head, Point *tail, Point *food_pos, uint16_t *sn
     if(eat_check(head, food_pos)){ 
         ret = Ate;
         *grow += SEGMENT_SIZE;
-        toggle_food(Off, food_pos);
+        toggle_food(frame, Off, food_pos);
     }
-    if(is_dead(head)) return Dead;
+    if(is_dead(head, frame)) return Dead;
     if(*grow){
         *grow = *grow - 1;
-        toggle_segment(head, On);
+        toggle_segment(frame, head, On);
         update_segment(head, head_dir, snakes); 
         return ret;
     }
 
-    toggle_segment(tail, Off);
-    toggle_segment(head, On);
+    toggle_segment(frame, tail, Off);
+    toggle_segment(frame, head, On);
     update_segment(head, head_dir, snakes);
 
     //uint8_t prev_tail_dir = get_unit(*tail);
@@ -326,7 +326,7 @@ snake_state update_snake(Point *head, Point *tail, Point *food_pos, uint16_t *sn
 }
 
 
-void spawn_snake(Point *tail, Point *head, uint8_t len, direction dir, uint16_t *snakes){
+void spawn_snake(Point *tail, Point *head, uint8_t len, direction dir, uint16_t *snakes, uint8_t *frame){
     int i;
     head[0] = tail[0];
     switch (dir)
@@ -345,11 +345,11 @@ void spawn_snake(Point *tail, Point *head, uint8_t len, direction dir, uint16_t 
         break;
     }
     for(i = 0; i < len; ++i){
-        toggle_segment(head, On);
+        toggle_segment(frame, head, On);
         update_segment(head, dir, snakes);
         move_segment(dir, head, 1);
     }
-    toggle_segment(head, On);
+    toggle_segment(frame, head, On);
     update_segment(head, dir, snakes);
 }
 
@@ -359,7 +359,7 @@ typedef struct Distance{
     int obstical_dist;
 } Distance;
 
-void swap(Distance *right, Distance *left){
+void swap_dist(Distance *right, Distance *left){
     Distance temp = *right;
     *right = *left;
     *left = temp;
@@ -369,14 +369,14 @@ void dist_fsort(Distance *dists, int len){
     int i, j;
     for(i = 1; i < len; ++i){
         for (j = i; 0 < j && dists[j].food_dist < dists[j - 1].food_dist; --j)
-            swap(dists + j, dists + j - 1);
+            swap_dist(dists + j, dists + j - 1);
     }
 }
 void dist_osort(Distance *dists, int len){
     int i, j;
     for(i = 1; i < len; ++i){
         for (j = i; 0 < j &&  dists[j - 1].obstical_dist < dists[j].obstical_dist; --j)
-            swap(dists + j, dists + j - 1);
+            swap_dist(dists + j, dists + j - 1);
     }
 }
 
@@ -388,7 +388,7 @@ uint8_t is_segment(Point pos, const Point *segment){
     return 0;
 }
 
-int obstacle_distance(direction dir, const Point* head, const Point* tail, Point food_pos, uint16_t *snakes, Point check_dists, int distance){
+int obstacle_distance(direction dir, const Point* head, const Point* tail, Point food_pos, uint16_t *snakes, uint8_t *frame, Point check_dists, int distance){
     int i;
     int j;
     uint8_t food = 0;
@@ -405,9 +405,9 @@ int obstacle_distance(direction dir, const Point* head, const Point* tail, Point
                 //else if(is_segment(current, tail) && get_unit(*tail, snakes) == Right)
                   //  loop = 1;
                 else{ 
-                    if(get_pixel(current))
+                    if(get_pixel(frame, current))
                         return i;
-                    else if(distance + (SEGMENT_SIZE - 1) < i) passed = 1;
+                   // else if(distance + (SEGMENT_SIZE - 1) < i) passed = 1;
                 }
             }
             if(food || passed || loop) return 255;
@@ -423,9 +423,9 @@ int obstacle_distance(direction dir, const Point* head, const Point* tail, Point
                 //else if(is_segment(current, tail) && get_unit(*tail, snakes) == Left)
                   //  loop = 1;
                 else{ 
-                    if(get_pixel(current))
+                    if(get_pixel(frame, current))
                         return i;
-                    else if(distance + (SEGMENT_SIZE - 1) < i) passed = 1;
+                   // else if(distance + (SEGMENT_SIZE - 1) < i) passed = 1;
                 }
             }
             if(food || passed || loop) return 255;
@@ -443,10 +443,10 @@ int obstacle_distance(direction dir, const Point* head, const Point* tail, Point
                 //else if(is_segment(current, tail) && get_unit(*tail, snakes) == Up)
                   //  loop = 1;
                 else{ 
-                    if(get_pixel(current)){
+                    if(get_pixel(frame, current)){
                         return i;
                     }
-                    else if(distance + (SEGMENT_SIZE - 1) < i) passed = 1;
+                   // else if(distance + (SEGMENT_SIZE - 1) < i) passed = 1;
                 }
             }
             if(food || passed || loop){
@@ -464,9 +464,9 @@ int obstacle_distance(direction dir, const Point* head, const Point* tail, Point
                 //else if(is_segment(current, tail) && get_unit(*tail, snakes) == Down)
                   //  loop = 1;
                 else{ 
-                    if(get_pixel(current))
+                    if(get_pixel(frame, current))
                         return i;
-                    else if(distance + (SEGMENT_SIZE - 1) < i) passed = 1;
+                   // else if(distance + (SEGMENT_SIZE - 1) < i) passed = 1;
                 }
             }
             if(food || passed || loop) return 255;
@@ -496,7 +496,7 @@ int obstacle_distance(direction dir, const Point* head, const Point* tail, Point
     write_char((Point){15, 0}, row_num[2]);*/
     return 255;
 }
-direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes, uint8_t clo){
+direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes, uint8_t *frame, uint8_t clo){
     direction ret;
     Distance dir_dists[3];
     
@@ -603,7 +603,7 @@ direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes, u
     for(i = 0; i < 3; ++i){
         Point ret[SEGMENT_SIZE];
         get_rotated(ori_dir, dir_dists[i].dir, head, ret);
-        dir_dists[i].obstical_dist = obstacle_distance(dir_dists[i].dir, ret, tail, food_pos, snakes, (Point){128, 32}, dir_dists[i].food_dist);
+        dir_dists[i].obstical_dist = obstacle_distance(dir_dists[i].dir, ret, tail, food_pos, snakes, frame, (Point){15, 5}, dir_dists[i].food_dist);
         
         /*
         if(dir_dists[i].dir == Up){

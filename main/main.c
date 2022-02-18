@@ -4,6 +4,7 @@
 #include "snakelogic.h"
 #include "snakegame.h"
 #include "menus.h"
+#include "data.h"
 
 
 int main(void){
@@ -91,16 +92,26 @@ int main(void){
     insert_score(&score_board, &score5);
 */
     difficulty Level_diff = None;
-    difficulty AI_diff = None;
+    difficulty ai_diff = None;
     int cs = 0;
-    ai_snake_game(None, &cs);
-    return 0;
+    //ai_snake_game(None, &cs);
+    
+/*Image menu_help = {
+        Row, 128, 8, LOCATOR_MENU_HELP
+    };
+    draw_image_rotated(SCREEN, &menu_help, (Point){0,0}, 45, 1);
+    update_disp(SCREEN);    
+    return 0;*/
 
     while (1){
+        
+        /*
         int len;
         char* row_num = itoaconv(current, &len);
-        write_char((Point){15, 0}, row_num[0]);
-        update_disp(); 
+        write_char(SCREEN, (Point){15, 0}, row_num[0]);
+        update_disp(SCREEN); 
+        */
+        
         switch (current)
         {
         case Start:{
@@ -110,23 +121,27 @@ int main(void){
         case Main:{
             Options_button main_options[] = {
                 //casting to avoid "undefined reference to `memcpy'" - error
-                (Options_button){Game, "Play\n"},
-                (Options_button){Score_board, "Score board\n"},
-                (Options_button){Level_diff, "Level difficulty\n"},
-                (Options_button){AI_diff, "AI difficulty\n"},
-                (Options_button){Start, "Back to start\n"},
-                (Options_button){Quit, "Quit\n"}
+                (Options_button){Game, "PLAY\n", 0},
+                (Options_button){Score_board, "SCORE BOARD\n", 0},
+                (Options_button){Leveld, "LEVEL DIFFICULTY\n", 0},
+                (Options_button){AId, "AI DIFFICULTY\n", 0},
+                (Options_button){Start, "BACK TO START\n", 0},
+                (Options_button){Quit, "QUIT\n", 0}
             };
             Options_menu main_menu = {
                 main_options,
-                0, 0, 6, 4
+                0, 0, 6, 3
             };
-            current = locator_menu(&main_menu);
+            Image menu_help = {
+                Row, 128, 8, LOCATOR_MENU_HELP
+            };
+            draw_image(SCREEN, &menu_help, (Point){0, 0});
+            current = locator_menu(&main_menu, BTN3_4, SCREEN);
             break;
         }
         case Game:
             current_score = 0;
-            if(AI_diff == None) current = solo_snake_game(Level_diff, &current_score);
+            if(ai_diff == None) current = solo_snake_game(Level_diff, &current_score);
             else; //ai_snake_game();
             break;
         case End_options:{
@@ -135,28 +150,36 @@ int main(void){
             int score_pos = top_score(&score_board, current_score);
             if(score_pos != -1){
                 end_options = (Options_button[]){
-                    (Options_button){Name_input, "SAVE SCORE\n"},
-                    (Options_button){Game, "RETRY\n"},
-                    (Options_button){Main, "BACK TO MENU\n"}
+                    (Options_button){Name_input, "SAVE SCORE\n", 0},
+                    (Options_button){Game, "RETRY\n", 0},
+                    (Options_button){Main, "BACK TO MENU\n", 0}
                 };
                 Options_menu end_menu = {
                     end_options,
-                    0, 0, 3, 3
+                    0, 0, 3, 2
                 };
-                write_row(0, "GAME OVER");
-                current = locator_menu(&end_menu);
+                write_row(SCREEN, 0, "   GAME OVER   ");
+                Image menu_help = {
+                    Row, 128, 8, LOCATOR_MENU_HELP
+                };
+                draw_image(SCREEN, &menu_help, (Point){0, 8});
+                current = locator_menu(&end_menu, BTN3_4, SCREEN);
             }
             else{
                 end_options = (Options_button[]){
-                    (Options_button){Game, "RETRY\n"},
-                    (Options_button){Main, "BACK TO MENU\n"}
+                    (Options_button){Game, "RETRY\n", 0},
+                    (Options_button){Main, "BACK TO MENU\n", 0}
                 };
                 Options_menu end_menu = {
                     end_options,
-                    0, 0, 2, 3
+                    0, 0, 2, 2
                 };
-                write_row(0, "GAME OVER");
-                current = locator_menu(&end_menu);  
+                write_row(SCREEN, 0, "   GAME OVER   ");
+                Image menu_help = {
+                   Row, 128, 8, LOCATOR_MENU_HELP
+                };
+                draw_image(SCREEN, &menu_help, (Point){0, 8});
+                current = locator_menu(&end_menu, BTN3_4, SCREEN);  
             }
             break;
         }
@@ -165,7 +188,7 @@ int main(void){
             Score score;
             score.score = current_score;
             score.name[MAX_NAME_LEN] = 0;
-            current = name_input(score.name);
+            current = name_input(score.name, SCREEN);
             /*while (1)
             {
                 write_row(1, name);
@@ -178,16 +201,36 @@ int main(void){
             break;
         }
         case Score_board:
-            current = Score_board_menu(&score_board);
+            current = score_board_menu(&score_board, SCREEN);
             break;
-        case Leveld: 
-            
+        case Leveld:{ 
+            Options_button diffs[] = {
+                (Options_button){None, (char[]){"NO OBSTACLES   "}, 0},
+                (Options_button){Normal, (char[]){"NORMAL         "}, 0},
+                (Options_button){Hard, (char[]){"HARD           "}, 0}
+            };
+            Options_menu ob_diff_menu = {
+                diffs,
+                0, 0, 3, 3
+            };
+            current = diff_menu(&Level_diff, &ob_diff_menu, SCREEN);  
             break;
-        case AId:
-            
+        }
+        case AId:{
+            Options_button diffs[] = {
+                (Options_button){None, (char[]){"NO AI          "}, 0},
+                (Options_button){Normal, (char[]){"NORMAL         "}, 0},
+                (Options_button){Hard, (char[]){"HARD           "}, 0}
+            };
+            Options_menu ob_diff_menu = {
+                diffs,
+                0, 0, 3, 3
+            };
+            current = diff_menu(&ai_diff, &ob_diff_menu, SCREEN);  
             break;
+        }
         case Quit:
-            clear_screen();
+            clear_frame(SCREEN);
             return 0;
             break;
         default:

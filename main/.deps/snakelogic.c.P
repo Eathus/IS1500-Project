@@ -1,8 +1,10 @@
 snakelogic.c.o: snakelogic.c snakelogic.h u32graphics.h \
+ /opt/mcb32tools/include/math.h /opt/mcb32tools/include/machine/ieeefp.h \
  /opt/mcb32tools/include/stdint.h \
  /opt/mcb32tools/lib/gcc/mipsel-mcb32-elf/4.9.2/include/stdint-gcc.h \
  /opt/mcb32tools/include/pic32mx.h
 snakelogic.c snakelogic.h u32graphics.h :
+ /opt/mcb32tools/include/math.h /opt/mcb32tools/include/machine/ieeefp.h :
  /opt/mcb32tools/include/stdint.h :
  /opt/mcb32tools/lib/gcc/mipsel-mcb32-elf/4.9.2/include/stdint-gcc.h :
  /opt/mcb32tools/include/pic32mx.h :

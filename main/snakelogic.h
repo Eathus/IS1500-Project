@@ -29,20 +29,20 @@ uint8_t get_unit(const Point coordinates, uint16_t const *snakes);
 void set_ustripe(Point coordinates, uint16_t, uint16_t *snakes);
 void set_unit(Point coordinates, uint8_t val, uint16_t *snakes);
 
-snake_state update_snake(Point *head, Point *tail, Point *food_pos, uint16_t *snakes, uint8_t *grow);
+snake_state update_snake(Point *head, Point *tail, Point *food_pos, uint8_t *grow, uint16_t *snakes, uint8_t *frame);
 
 uint8_t eat_check(Point *head, Point const *food_pos);
 
-void eat(Point *head, Point *food_pos, uint16_t *snakes);
+void eat(Point *head, Point *food_pos, uint16_t *snakes, uint8_t *frame);
 
 void change_dir(direction dir, Point *head, uint16_t *snakes);
 
-void spawn_snake(Point *tail, Point *head, uint8_t len, direction dir, uint16_t *snakes);
+void spawn_snake(Point *tail, Point *head, uint8_t len, direction dir, uint16_t *snakes, uint8_t *frame);
 
-void toggle_food(pixel_status stat, Point const *food_pos);
+void toggle_food(uint8_t *frame, pixel_status stat, Point const *food_pos);
 
-uint8_t update_food(Point coordinate, Point *food_pos);
+uint8_t update_food(uint8_t *frame, Point coordinate, Point *food_pos);
 
 Point prand(Point *tail, Point *head);
 
-direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes, uint8_t clo);
+direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes, uint8_t *frame, uint8_t clo);

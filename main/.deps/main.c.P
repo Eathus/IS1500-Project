@@ -6,11 +6,11 @@ main.c.o: main.c /opt/mcb32tools/include/stdlib.h \
  /opt/mcb32tools/include/stdio.h \
  /opt/mcb32tools/lib/gcc/mipsel-mcb32-elf/4.9.2/include/stdarg.h \
  /opt/mcb32tools/include/string.h u32graphics.h \
+ /opt/mcb32tools/include/math.h /opt/mcb32tools/include/machine/ieeefp.h \
  /opt/mcb32tools/include/stdint.h \
  /opt/mcb32tools/lib/gcc/mipsel-mcb32-elf/4.9.2/include/stdint-gcc.h \
  /opt/mcb32tools/include/pic32mx.h snakelogic.h snakegame.h snakeio.h \
- menus.h /opt/mcb32tools/include/math.h \
- /opt/mcb32tools/include/machine/ieeefp.h data.h
+ menus.h data.h
 main.c /opt/mcb32tools/include/stdlib.h :
  /opt/mcb32tools/include/klibc/extern.h :
  /opt/mcb32tools/include/klibc/inline.h :
@@ -19,8 +19,8 @@ main.c /opt/mcb32tools/include/stdlib.h :
  /opt/mcb32tools/include/stdio.h :
  /opt/mcb32tools/lib/gcc/mipsel-mcb32-elf/4.9.2/include/stdarg.h :
  /opt/mcb32tools/include/string.h u32graphics.h :
+ /opt/mcb32tools/include/math.h /opt/mcb32tools/include/machine/ieeefp.h :
  /opt/mcb32tools/include/stdint.h :
  /opt/mcb32tools/lib/gcc/mipsel-mcb32-elf/4.9.2/include/stdint-gcc.h :
  /opt/mcb32tools/include/pic32mx.h snakelogic.h snakegame.h snakeio.h :
- menus.h /opt/mcb32tools/include/math.h :
- /opt/mcb32tools/include/machine/ieeefp.h data.h :
+ menus.h data.h :

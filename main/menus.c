@@ -59,15 +59,15 @@ void keyboard_move(direction dir, uint8_t *index, Keyboard_button const *keyboar
     }
 }
 
-void update_keyboard(uint8_t index, Keyboard_button const *keyboard, uint8_t len){
+void update_keyboard(uint8_t index, Keyboard_button const *keyboard, uint8_t len, uint8_t *frame){
     int i;
     switch(keyboard[index].type){
         case Letter: case Number:
-            invert_char(keyboard[index].pos);
+            invert_char(frame, keyboard[index].pos);
             break;
         case Space: case Back: case Enter: case Caps:
             for(i = 0; i < 3; ++i)
-                invert_char((Point){keyboard[index].pos.x + i - 1, keyboard[index].pos.y});
+                invert_char(frame, (Point){keyboard[index].pos.x + i - 1, keyboard[index].pos.y});
             break;
     }
 }
@@ -86,27 +86,27 @@ int mod_sub(int left, int right, int len){
     if(res < 0) res = len - (diff == 0 ? len : diff);
     return res;
 }
-void draw_kb_button(uint8_t index, Keyboard_button const *keyboard, uint8_t len, uint8_t caps){
+void draw_kb_button(uint8_t index, Keyboard_button const *keyboard, uint8_t len, uint8_t caps, uint8_t *frame){
     int i;
     char ch;
     switch(keyboard[index].type){
         case Letter:
             if(caps){}
-            write_char(keyboard[index].pos, caps ? keyboard[index].text[0] - 32 : keyboard[index].text[0]);
+            write_char(frame, keyboard[index].pos, caps ? keyboard[index].text[0] - 32 : keyboard[index].text[0]);
             break;
         case Number:
-            write_char(keyboard[index].pos, caps ? keyboard[index].text[0] + 5 : keyboard[index].text[0]);
+            write_char(frame, keyboard[index].pos, caps ? keyboard[index].text[0] + 5 : keyboard[index].text[0]);
             break;
         case Space: case Back: case Enter: case Caps:
             for(i = 0; i < 3; ++i)
-                write_char((Point){keyboard[index].pos.x + i - 1, keyboard[index].pos.y}, keyboard[index].text[i]);
+                write_char(frame, (Point){keyboard[index].pos.x + i - 1, keyboard[index].pos.y}, keyboard[index].text[i]);
             break;
     }
 }
-void draw_keyboard(Keyboard_button const *keyboard, uint8_t len, uint8_t caps){
+void draw_keyboard(Keyboard_button const *keyboard, uint8_t len, uint8_t caps, uint8_t *frame){
     int i;
     for(i = 0; i < len; ++i){
-        draw_kb_button(i, keyboard, len, caps);
+        draw_kb_button(i, keyboard, len, caps, frame);
     }
 }
 /*
@@ -124,12 +124,16 @@ void draw_options(Options_menu const *menu){
     }
 }
 */
-void draw_options(Options_menu const *menu){
+void draw_options(Options_menu const *menu, uint8_t *frame){
     int i;
     char empty = '\n';
     for(i = 0; i < menu->page_len; ++i){
-        if(menu->len <= i + menu->start) write_row(i + 4 - menu->page_len, &empty);
-        else write_row(i + 4 - menu->page_len, menu->options[menu->start + i].text);
+        if(menu->len <= i + menu->start) write_row(frame, i + 4 - menu->page_len, &empty);
+        else{
+            write_row(frame, i + 4 - menu->page_len, menu->options[menu->start + i].text);
+            if(menu->options[menu->start + i].invert)
+                invert_row(frame, i + 4 - menu->page_len);
+        }
     }
 }
 /*void options_button_scroll(direction dir, uint8_t *index, uint8_t *start, Options_button const * options, uint8_t len) {
@@ -158,7 +162,7 @@ void draw_options(Options_menu const *menu){
 //draw_options(&(Options_menu){menu->options, menu->start, menu->index, menu->len % menu->page_len, menu->page_len});
 //draw_options(&(Options_menu){menu->options, menu->start, menu->index, menu->len - menu->index, menu->page_len});
 
-void options_page_scroll(direction dir, Options_menu *menu) {
+void options_page_scroll(direction dir, Options_menu *menu, uint8_t *frame) {
     uint8_t prev_page = 0;
     switch(dir) {
         case Up:
@@ -169,32 +173,32 @@ void options_page_scroll(direction dir, Options_menu *menu) {
                 if(menu->index == menu->len - 1 && menu->len % menu->page_len != 0) 
                     menu->start = menu->len - (menu->len % menu->page_len);
                 else menu->start = mod_sub(menu->start, menu->page_len, menu->len);
-                draw_options(menu);
+                draw_options(menu, frame);
             }
             break;
         case Down:
             menu->index = (menu->index + 1) % menu->len;
             if(menu->index == (menu->start + menu->page_len) || menu->index == 0){
                 menu->start = menu->index;
-                draw_options(menu);
+                draw_options(menu, frame);
             }
             break;
     }
 }
-void update_options(Options_menu const * menu){
-    invert_row(mod_sub(menu->index, menu->start, menu->len) + 4 - menu->page_len);
+void update_options(Options_menu const * menu, uint8_t *frame){
+    invert_row(frame, mod_sub(menu->index, menu->start, menu->len) + 4 - menu->page_len);
     char chars;
     
     //num32asc(&chars, menu->start);
     //num32asc(&chars, menu->index);
     //write_row(0, &chars);
 }
-game_state locator_menu(Options_menu * menu){
+uint8_t locator_menu(Options_menu * menu, io_button_inputs ret, uint8_t *frame){
     int btn;
     int update_counter = 0;
 
-    draw_options(menu);
-    update_options(menu);
+    draw_options(menu, frame);
+    update_options(menu, frame);
     while (1){
         int inter_flag = (IFS(0) & 0x100) >> 8;
         btn = getbtns();
@@ -204,31 +208,37 @@ game_state locator_menu(Options_menu * menu){
         }
         if(update_counter == 10){
             update_counter = 0;
-            if (btn & 0xC) {
-                clear_screen();
+            if (btn & ret) {
+                clear_frame(frame);
                 return menu->options[menu->index].option;
             }
             /* BTN2 - AND with corresponding bit*/
             else if(btn & 0x2) {
-                update_options(menu);
-                options_page_scroll(Up, menu);
-                update_options(menu);
+                update_options(menu, frame);
+                options_page_scroll(Up, menu, frame);
+                update_options(menu, frame);
             }
             /* BTN1 - AND with corresponding bit*/
             else if (btn & 0x1) {
-                update_options(menu);
-                options_page_scroll(Down, menu);
-                update_options(menu);
+                update_options(menu, frame);
+                options_page_scroll(Down, menu, frame);
+                update_options(menu, frame);
             }
-            int len;
-            char* row_num = itoaconv(menu->index, &len);
-            write_char((Point){15, 0}, row_num[0]);
-            update_disp(); 
+            else if(btn){
+                clear_frame(frame);
+                return btn;
+            }
+
+            //int len;
+            //char* row_num = itoaconv(menu->index, &len);
+            //write_char(frame, (Point){15, 0}, row_num[0]);
+
+            update_disp(frame); 
         }
     }
 }
 
-game_state name_input(char *name){
+game_state name_input(char *name, uint8_t *frame){
     char upper[3] = {1, 8, 3};
     const Keyboard_button const keyboard[] = {
         //casting to avoid "undefined reference to `memcpy'" - error
@@ -259,8 +269,8 @@ game_state name_input(char *name){
     int btn;
     int sw;
 
-    draw_keyboard(keyboard, len, caps);
-    update_keyboard(index, keyboard, len);
+    draw_keyboard(keyboard, len, caps, frame);
+    update_keyboard(index, keyboard, len, frame);
     while(1){
         int inter_flag = (IFS(0) & 0x100) >> 8;
         btn = getbtns();
@@ -274,7 +284,7 @@ game_state name_input(char *name){
             update_counter = 0;
             if(blink_counter >= 70){ 
                 blink_counter = 0;
-                invert_char((Point){cursor_index, 0});
+                invert_char(frame, (Point){cursor_index, 0});
             }
             if (sw){
                 if(btn){
@@ -287,7 +297,7 @@ game_state name_input(char *name){
                             if(caps) ch = keyboard[index].text[0] - 32;    
                             else ch = keyboard[index].text[0];
                             name[cursor_index] = ch;
-                            write_char((Point){cursor_index, 0}, ch);
+                            write_char(frame, (Point){cursor_index, 0}, ch);
                             cursor_index++;
                         }
                         break;
@@ -296,56 +306,59 @@ game_state name_input(char *name){
                             if(caps) ch = keyboard[index].text[0] + 5;
                             else ch = keyboard[index].text[0];
                             name[cursor_index] = ch;
-                            write_char((Point){cursor_index, 0}, ch);
+                            write_char(frame, (Point){cursor_index, 0}, ch);
                             cursor_index++;
                         }
                         break;
                     case Space:
                         if(cursor_index < MAX_NAME_LEN){
                             name[cursor_index] = ' ';
-                            write_char((Point){cursor_index, 0}, ' ');
+                            write_char(frame, (Point){cursor_index, 0}, ' ');
                             cursor_index++;
                         }
                         break;
                     case Back:
                         if(0 <= cursor_index){
-                            write_char((Point){cursor_index, 0}, '\0');
+                            write_char(frame, (Point){cursor_index, 0}, '\0');
                             if(0 < cursor_index) cursor_index--;
                             name[cursor_index] = '\0';
-                            write_char((Point){cursor_index, 0}, '\0');
+                            write_char(frame, (Point){cursor_index, 0}, '\0');
                         }
                         break;
                     case Caps:
                         if(caps){
                             caps = 0;
-                            draw_keyboard(keyboard, len, caps);
-                            update_keyboard(index, keyboard, len);
+                            draw_keyboard(keyboard, len, caps, frame);
+                            update_keyboard(index, keyboard, len, frame);
                         }
                         else{
                             caps = 1;
-                            draw_keyboard(keyboard, len, caps);
+                            draw_keyboard(keyboard, len, caps, frame);
                         }
                         break;
                     case Enter:
                     {
                         Options_button options[] = {
                             //casting to avoid "undefined reference to `memcpy'" - error
-                            (Options_button){Cancel, "1: CANCEL\n"},
-                            (Options_button){Game, "2: RETRY\n"},
-                            (Options_button){Main, "3: BACK TO MENU\n"},
+                            (Options_button){Cancel, "1: CANCEL\n", 0},
+                            (Options_button){Game, "2: RETRY\n", 0},
+                            (Options_button){Main, "3: BACK TO MENU\n", 0},
                         };
                         Options_menu menu = {
                             options,
                             0, 0, 3, 3
                         };
-                        write_row(0, "Placeholder");
-                        ret = locator_menu(&menu);
+                        Image menu_help = {
+                            Row, 128, 8, LOCATOR_MENU_HELP
+                        };
+                        draw_image(SCREEN, &menu_help, (Point){0, 0});
+                        ret = locator_menu(&menu, BTN3_4, frame);
                         switch (ret)
                         {
                         case Cancel:
-                            draw_keyboard(keyboard, len, caps);
-                            update_keyboard(index, keyboard, len);
-                            write_string(0, name, cursor_index);
+                            draw_keyboard(keyboard, len, caps, frame);
+                            update_keyboard(index, keyboard, len, frame);
+                            write_string(frame, 0, name, cursor_index);
                             break;
                         default:
                             name[cursor_index] = 0;
@@ -360,30 +373,30 @@ game_state name_input(char *name){
             }
             else{
                 if (btn & 0x8) {
-                    update_keyboard(index, keyboard, len);
+                    update_keyboard(index, keyboard, len, frame);
                     keyboard_move(Left, &index, keyboard, len);
-                    update_keyboard(index, keyboard, len);
+                    update_keyboard(index, keyboard, len, frame);
                 }
                 /* BTN3 - AND with corresponding bit*/
                 else if (btn & 0x4) {
-                    update_keyboard(index, keyboard, len);
+                    update_keyboard(index, keyboard, len, frame);
                     keyboard_move(Right, &index, keyboard, len);
-                    update_keyboard(index, keyboard, len);
+                    update_keyboard(index, keyboard, len, frame);
                 }
                 /* BTN2 - AND with corresponding bit*/
                 else if(btn & 0x2) {
-                    update_keyboard(index, keyboard, len);
+                    update_keyboard(index, keyboard, len, frame);
                     keyboard_move(Up, &index, keyboard, len);
-                    update_keyboard(index, keyboard, len);
+                    update_keyboard(index, keyboard, len, frame);
                 }
                 /* BTN1 - AND with corresponding bit*/
                 else if (btn & 0x1) {
-                    update_keyboard(index, keyboard, len);
+                    update_keyboard(index, keyboard, len, frame);
                     keyboard_move(Down, &index, keyboard, len);
-                    update_keyboard(index, keyboard, len);
+                    update_keyboard(index, keyboard, len, frame);
                 }
             }
-            update_disp(); 
+            update_disp(frame); 
         }
     }
 }
@@ -429,11 +442,13 @@ void insert_score(Sboard *board, Score const *score){
   assign_string(board->board[pos].disp_stirng + (CHAR_ROW_SIZE - num_len), number, 1);
 }
 
-game_state Score_board_menu(Sboard const *board){
+game_state score_board_menu(Sboard const *board, uint8_t *frame){
     if(board->len == 0){
-        //clear_screen();
-        //write_row(1, "NO SAVED SCORES");
-        //update_disp();
+        clear_frame(frame);
+        write_row(frame, 0, "NO SAVED SCORES");
+        write_row(frame, 2, "CLICK ANY BUTTON");
+        write_row(frame, 3, "TO CONTINUE");
+        update_disp(frame);
         
         int btn;
         int update_counter = 0;
@@ -447,7 +462,7 @@ game_state Score_board_menu(Sboard const *board){
             if(update_counter == 10){
                 update_counter = 0;
                 if(btn) {
-                    clear_screen();
+                    clear_frame(frame);
                     return Main;
                 }
             }
@@ -456,12 +471,43 @@ game_state Score_board_menu(Sboard const *board){
     int i;
     Options_button scores[board->len];
     for(i = 0; i < board->len; ++i){
-        scores[i] = (Options_button){Main, board->board[i].disp_stirng};
+        scores[i] = (Options_button){Main, board->board[i].disp_stirng, 0};
     }
     Options_menu menu = {
         scores,
         0, 0, board->len, 3
     };
-    write_row(0, "BTN4/3 = Back");
-    return locator_menu(&menu);
+    Image scoreboard_help = {
+        Row, 128, 8, SCOREBOARD_HELP
+    };
+    draw_image(SCREEN, &scoreboard_help, (Point){0, 0});
+    return locator_menu(&menu, BTN3_4, frame);
+}
+
+#define alloca(x)__builtin_alloca(x)
+
+game_state diff_menu(difficulty * diff, Options_menu * menu, uint8_t *frame){
+    Image difficulty_help = {
+        Row, 128, 8, DIFFICULTY_HELP
+    };
+    int current;
+    for(current = 0; current < menu->len; ++current){
+        if(menu->options[current].option == *diff){
+            menu->options[current].text[15] = 9;
+            break;    
+        }
+    }
+    while (1)
+    {
+        draw_image(frame, &difficulty_help, (Point){0, 0});
+        difficulty new_diff = locator_menu(menu, BTN3, frame);
+        if(new_diff == BTN4) return Main;
+        if(new_diff != *diff){
+            menu->options[current].text[15] = ' ';
+            current = menu->index;
+            *diff = new_diff;
+            menu->options[menu->index].text[15] = 9;
+        }
+    }
+
 }

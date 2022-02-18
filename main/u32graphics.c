@@ -24,10 +24,10 @@ uint8_t SCREEN[128*4];
 
 //matrix for SCREEN in column major; stored as a unsigned char array
 
-void clear_screen(){
+void clear_frame(uint8_t *frame){
 	int i;
 	for(i = 0; i < SCREEN_LEN; ++i){
-		SCREEN[i] = 0;
+		frame[i] = 0;
 	}
 }
 
@@ -53,22 +53,22 @@ int get_stripe_index(Point coordinates){
 int get_pixel_index(uint8_t y){
     return (y % 32) % STRIPE_BIT_LEN;
 }
-uint8_t get_stripe(Point coordinates){
-    return SCREEN[get_stripe_index(coordinates)];
+uint8_t get_stripe(uint8_t *frame, Point coordinates){
+    return frame[get_stripe_index(coordinates)];
 }
 
-uint8_t get_pixel(Point coordinates){
-    uint8_t stripe = SCREEN[pixel_to_stripe(coordinates)];
+uint8_t get_pixel(uint8_t *frame, Point coordinates){
+    uint8_t stripe = frame[pixel_to_stripe(coordinates)];
     return (stripe >> get_pixel_index(coordinates.y)) & 0x01;
 }
 
-void set_stripe(Point coordinates, uint8_t val){
-    SCREEN[get_stripe_index(coordinates)] = val;
+void set_stripe(uint8_t *frame, Point coordinates, uint8_t val){
+    frame[get_stripe_index(coordinates)] = val;
 }
 
-void set_pixel(Point coordinates, uint8_t val){
+void set_pixel(uint8_t *frame, Point coordinates, uint8_t val){
     uint8_t index = get_pixel_index(coordinates.y);
-    insert_bit(index, val, SCREEN + pixel_to_stripe(coordinates));
+    insert_bit(index, val, frame + pixel_to_stripe(coordinates));
 }
 Point chcoord_to_stcoord(Point coordinates){
 	return (Point){coordinates.x * 8, coordinates.y};
@@ -88,97 +88,223 @@ uint8_t spi_send_recv(uint8_t data) {
 
 
 
-void write_char(Point chcoord, char ch){
+void write_char(uint8_t *frame, Point chcoord, char ch){
 	int i;
 	int c = ch;
 	chcoord = chcoord_to_stcoord(chcoord);
 	for(i = 0; i < 8; ++i){
-		set_stripe((Point){chcoord.x + i, chcoord.y}, FONT[c * 8 + i]);
+		set_stripe(frame, (Point){chcoord.x + i, chcoord.y}, FONT[c * 8 + i]);
 	}
 }
-void invert_char(Point chcoord){
+void invert_char(uint8_t *frame, Point chcoord){
 	int i;
 	chcoord = chcoord_to_stcoord(chcoord);
 	for(i = 0; i < 8; ++i){
-		set_stripe((Point){chcoord.x + i, chcoord.y}, ~get_stripe((Point){chcoord.x + i, chcoord.y}));
+		set_stripe(frame, (Point){chcoord.x + i, chcoord.y}, ~get_stripe(frame, (Point){chcoord.x + i, chcoord.y}));
 	}
 }
 
-void write_row(uint8_t line, char const *str){
+void write_row(uint8_t *frame, uint8_t line, char const *str){
 	line %= 4;
 	int i;
 	for(i = 0; i < 16; ++i){
 		if(*str == '\n' || *str == '\0'){
-			for(i; i < 16; ++i) write_char((Point){i, line}, ' ');
+			for(i; i < 16; ++i) write_char(frame, (Point){i, line}, ' ');
 			return;
 		}
 		if(*str & 0x80) continue;
-		write_char((Point){i, line}, *str);
+		write_char(frame, (Point){i, line}, *str);
 		str++;
 	}
 }
-void invert_row(uint8_t line){
+void invert_row(uint8_t *frame, uint8_t line){
 	line %= 4;
 	int i, j;
 	for(i = 0; i < 16; ++i){
-		invert_char((Point){i, line});
+		invert_char(frame, (Point){i, line});
 	}
 }
 
-void write_string(uint8_t line, char const *str, uint8_t len){
+void write_string(uint8_t *frame, uint8_t line, char const *str, uint8_t len){
 	line %= 4;
 	int i;
 	for(i = 0; i < len; ++i){
 		if(*str & 0x80) continue;
-		write_char((Point){i, line}, *str);
+		write_char(frame, (Point){i, line}, *str);
 		str++;
 	}
 }
-void invert_string(uint8_t line, uint8_t len){
+void invert_string(uint8_t *frame, uint8_t line, uint8_t len){
 	line %= 4;
 	int i, j;
 	for(i = 0; i < len; ++i){
-		invert_char((Point){i, line});
+		invert_char(frame, (Point){i, line});
 	}
 }
 
 Point normalize(uint8_t width, uint8_t height, Point coords){
 	return (Point){coords.x % width, coords.y % height};
 }
-uint8_t get_image_pixel(Point coords, const Image *image){
-	Point normalized = normalize(image->width, image->height, coords);
-	int index = 
-		image->width * (normalized.y / STRIPE_BIT_LEN) + 
-		(normalized.x % image->width);
-	return (image->image[index] >> normalized.y % STRIPE_BIT_LEN) & 0x1;
+
+void rotate_point90(Point *point, uint8_t turns, uint8_t clockwise){
+	Point original = {point->x, -point->y + 31};
+	int i;
+	if(clockwise){
+		for(i = 0; i < turns; ++i){
+			point->x = original.y;
+			point->y = -original.x;  
+			original = (Point){point->x, point->y};
+		}
+	}
+	else{
+		for(i = 0; i < turns; ++i){
+			point->x = -original.y;
+			point->y = original.x;  
+			original = (Point){point->x, point->y};
+		}
+	}
+	*point = (Point){original.x % 128, original.y % 32};
 }
 
-void draw_image(const Image *image){
-	int i, j;
-	for (i = 0; i < image->height; ++i){
-		for (j = 0; j < image->width; ++j){
-			Point normalized = 
-				{((int)image->pos.x + j) % 128, ((int)image->pos.y + i) % 32};
-			set_pixel(normalized, get_image_pixel((Point){j, i}, image));
+ //pos = where the top left pixel is
+
+int get_image_sindex(Point coords, const Image *image){
+	switch (image->im_major)
+	{
+		case Row:{
+			return
+				image->width * ((coords.y % image->height) / STRIPE_BIT_LEN) + 
+				(coords.x % image->width);
+		}
+		case Column:{
+			return 
+				image->height / STRIPE_BIT_LEN * (coords.x % image->width) + 
+				(coords.y % image->height) / STRIPE_BIT_LEN;
 		}
 	}
 }
 
-void draw_foreground(const Image *image, uint8_t forground_mode){
+uint8_t get_image_pixel(Point coords, const Image *image){
+	Point normalized = normalize(image->width, image->height, coords);
+	int index = get_image_sindex(normalized, image);
+	return (image->image[index] >> normalized.y % STRIPE_BIT_LEN) & 0x1;
+}
+
+void set_image_pixel(Point coords, uint8_t val, const Image *image){
+	Point normalized = normalize(image->width, image->height, coords);
+	int index = get_image_sindex(normalized, image);
+	insert_bit(normalized.y % STRIPE_BIT_LEN, val, image->image + index);
+}
+
+
+
+void transpose_image(Image *image){
+	switch (image->im_major) {
+        case Row:
+            image->im_major = Column;
+            break;
+        case Column:
+            image->im_major = Row;
+            break;
+    }
+    uint8_t temp = image->height;
+    image->height = image->width;
+    image->width = temp;
+}
+
+void swap_im_pixel(Image *image, Point lcoords, Point rcoords){
+	uint8_t temp = get_image_pixel(lcoords, image);
+	set_image_pixel(rcoords, get_image_pixel(lcoords, image), image);
+	set_image_pixel(rcoords, temp, image);
+}
+
+void reverse_image(Image *image, uint8_t horizontal){
+	int i, j;
+	if(horizontal){
+		for(i = 0; i < image->height; ++i){
+			for(j = 0; j < image->width / 2; ++j){
+				swap_im_pixel(image, (Point){j, i}, (Point){image->width - j, i});
+			}
+		}
+	}
+	else{
+		for(i = 0; i < image->width; ++i){
+			for(j = 0; j < image->height / 2; ++j){
+				swap_im_pixel(image, (Point){i, j}, (Point){i, image->height - j});
+			}
+		}
+	}
+}
+void rotate_image(Image *image, uint8_t turns, uint8_t clockwise){
+	int i;
+	if(clockwise){
+		for(i = 0; i < turns; ++i){
+			reverse_image(image, 1);
+			transpose_image(image);
+		}
+	}
+	else{
+		for(i = 0; i < turns; ++i){
+			transpose_image(image);
+			reverse_image(image, 1);
+		}
+	}
+}
+void copy_image(const Image* const original, Image* copy){
+	int i;
+	copy->height = original->height;
+	copy->width = original->width;
+	copy->im_major = original->im_major;
+	for(i = 0; i < original->height * original->width; ++i){
+		copy->image[i] = original->image[i];	
+	}
+}
+
+void draw_image(uint8_t *frame, const Image *image, Point pos){
+	int i, j;
+	for (i = 0; i < image->height; ++i){
+		for (j = 0; j < image->width; ++j){
+			Point normalized = 
+				{((int)pos.x + j) % 128, ((int)pos.y + i) % 32};
+			set_pixel(frame, normalized, get_image_pixel((Point){j, i}, image));
+		}
+	}
+}
+
+void draw_image_rotated(uint8_t *frame, const Image *image, Point pos, uint8_t turns, uint8_t clockwise){
+	int i, j;
+	Image rotated_image;
+	uint8_t im[image->height*image->width];
+	rotated_image.image = im;
+	copy_image(image, &rotated_image);
+	rotate_image(&rotated_image, turns, clockwise);
+	draw_image(frame, &rotated_image, pos);
+}
+
+void draw_foreground(uint8_t *frame, const Image *image, Point pos, uint8_t forground_mode){
 	int i, j;
 	forground_mode %= 2;
 	for (i = 0; i < image->height; ++i){
 		for (j = 0; j < image->width; ++j){
 			Point normalized =
-				{((int)image->pos.x + j) % 128, ((int)image->pos.y + i) % 32};
+				{((int)pos.x + j) % 128, ((int)pos.y + i) % 32};
 			uint8_t pixel = get_image_pixel((Point){j, i}, image);
-			if(pixel == forground_mode) set_pixel(normalized, pixel);
+			if(pixel == forground_mode) set_pixel(frame, normalized, pixel);
 		}
 	}
 }
 
+void draw_foreground_rotated(uint8_t *frame, const Image *image, Point pos, uint8_t forground_mode, uint8_t turns, uint8_t clockwise){
+	int i, j;
+	Image rotated_image;
+	uint8_t im[image->height*image->width];
+	rotated_image.image = im;
+	copy_image(image, &rotated_image);
+	rotate_image(&rotated_image, turns, clockwise);
+	draw_foreground(frame, &rotated_image, pos, forground_mode);
+}
 
-void update_disp(){
+void update_disp(uint8_t *frame){
     uint8_t i, j;
     for(i = 0; i < STRIPE_ROWS; ++i){
         DISPLAY_CHANGE_TO_COMMAND_MODE;
@@ -192,7 +318,7 @@ void update_disp(){
         DISPLAY_CHANGE_TO_DATA_MODE;
 		
 		for(j = 0; j < STRIPE_COLS; ++j)
-			spi_send_recv(get_stripe((Point){j, i}));
+			spi_send_recv(get_stripe(frame, (Point){j, i}));
     }
 }
 

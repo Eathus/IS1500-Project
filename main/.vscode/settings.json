@@ -3,6 +3,7 @@
         "u32graphics.h": "c",
         "pic32mx.h": "c",
         "stdio.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "string.h": "c"
     }
 }
