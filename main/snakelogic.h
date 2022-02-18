@@ -29,7 +29,11 @@ uint8_t get_unit(const Point coordinates, uint16_t const *snakes);
 void set_ustripe(Point coordinates, uint16_t, uint16_t *snakes);
 void set_unit(Point coordinates, uint8_t val, uint16_t *snakes);
 
+void set_segment(Point *left, const Point *right);
+
 snake_state update_snake(Point *head, Point *tail, Point *food_pos, uint8_t *grow, uint16_t *snakes, uint8_t *frame);
+
+snake_state update_ai_snake(Point *head, Point *tail, Point *food_pos, uint8_t *grow, uint16_t *snakes, uint8_t *frame, uint8_t *tracker);
 
 uint8_t eat_check(Point *head, Point const *food_pos);
 
@@ -45,4 +49,4 @@ uint8_t update_food(uint8_t *frame, Point coordinate, Point *food_pos);
 
 Point prand(Point *tail, Point *head);
 
-direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes, uint8_t *frame, uint8_t clo);
+direction snake_ai(Point *head, Point *tail, Point food_pos, Point check_dists, uint16_t* snakes, uint8_t *frame, uint8_t clo);

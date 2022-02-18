@@ -65,7 +65,7 @@ void move_segment(direction dir, Point* segment, uint8_t distance){
     }
 }
 
-void set_segment(Point *left, Point *right){
+void set_segment(Point *left, const Point *right){
     int i;
     for(i = 0; i < SEGMENT_SIZE; ++i) left[i] = right[i];
 }
@@ -277,6 +277,56 @@ Point prand(Point *tail, Point *head){
     Point ret;
     ret.x = ((TMR3 + tail->x * head->x) % (STRIPE_COLS / SEGMENT_SIZE)) * SEGMENT_SIZE;
     ret.y = ((TMR4 + tail->y * head->y) % (ROWS / SEGMENT_SIZE)) * SEGMENT_SIZE;
+    return ret;
+}
+
+snake_state update_ai_snake(Point *head, Point *tail, Point *food_pos, uint8_t *grow, uint16_t *snakes, uint8_t *frame, uint8_t *tracker){
+    int i;
+    snake_state ret = Alive;
+    direction head_dir = get_unit(*head, snakes);
+    move_segment(get_unit(*head, snakes), head, 1);
+    if(eat_check(head, food_pos)){ 
+        ret = Ate;
+        *grow += SEGMENT_SIZE;
+        toggle_food(frame, Off, food_pos);
+    }
+    if(is_dead(head, frame)) return Dead;
+    if(*grow){
+        *grow = *grow - 1;
+        toggle_segment(frame, head, On);
+        toggle_segment(tracker, head, On);
+        update_segment(head, head_dir, snakes); 
+        return ret;
+    }
+
+    toggle_segment(frame, tail, Off);
+    toggle_segment(frame, head, On);
+
+    toggle_segment(tracker, tail, Off);
+    toggle_segment(tracker, head, On);
+
+    update_segment(head, head_dir, snakes);
+
+    //uint8_t prev_tail_dir = get_unit(*tail);
+
+    Point prev_tail[SEGMENT_SIZE];
+    set_segment(prev_tail, tail); 
+    
+    move_segment(get_unit(*tail, snakes), tail, 1);
+
+    for(i = 0; i < SEGMENT_SIZE; ++i){
+        uint8_t prev_tail_dir = get_unit(prev_tail[i], snakes);
+        uint8_t cur_tail_dir = get_unit(tail[i], snakes);
+        if(prev_tail_dir != cur_tail_dir){
+            move_segment(prev_tail_dir, tail, SEGMENT_SIZE - 1);
+            rotate_segment(prev_tail_dir, cur_tail_dir, tail);
+            break;
+        }
+    }
+    /*if(cur_tail_dir != prev_tail_dir){
+        move_segment(prev_tail_dir, tail, SEGMENT_SIZE - 1);
+        rotate_segment(prev_tail_dir, cur_tail_dir, tail);
+    }*/
     return ret;
 }
 
@@ -496,7 +546,7 @@ int obstacle_distance(direction dir, const Point* head, const Point* tail, Point
     write_char((Point){15, 0}, row_num[2]);*/
     return 255;
 }
-direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes, uint8_t *frame, uint8_t clo){
+direction snake_ai(Point *head, Point *tail, Point food_pos, Point check_dists, uint16_t* snakes, uint8_t *frame, uint8_t clo){
     direction ret;
     Distance dir_dists[3];
     
@@ -603,7 +653,7 @@ direction snake_ai(Point *head, Point *tail, Point food_pos, uint16_t* snakes, u
     for(i = 0; i < 3; ++i){
         Point ret[SEGMENT_SIZE];
         get_rotated(ori_dir, dir_dists[i].dir, head, ret);
-        dir_dists[i].obstical_dist = obstacle_distance(dir_dists[i].dir, ret, tail, food_pos, snakes, frame, (Point){15, 5}, dir_dists[i].food_dist);
+        dir_dists[i].obstical_dist = obstacle_distance(dir_dists[i].dir, ret, tail, food_pos, snakes, frame, check_dists, dir_dists[i].food_dist);
         
         /*
         if(dir_dists[i].dir == Up){

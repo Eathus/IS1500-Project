@@ -8,5 +8,5 @@
 void game_init( void );
 
 /* This function is called repetitively from the main program */
-game_state solo_snake_game(difficulty level, int *current_score);
+game_state snake_game(difficulty ai, difficulty level, int *current_score);
 game_state ai_snake_game(difficulty level_diff, int *current_score);

@@ -141,8 +141,7 @@ int main(void){
         }
         case Game:
             current_score = 0;
-            if(ai_diff == None) current = solo_snake_game(Level_diff, &current_score);
-            else; //ai_snake_game();
+            current = snake_game(ai_diff, Level_diff, &current_score);
             break;
         case End_options:{
             Options_button *end_options;
