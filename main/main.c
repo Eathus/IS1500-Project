@@ -218,18 +218,20 @@ int main(void){
         case AId:{
             Options_button diffs[] = {
                 (Options_button){None, (char[]){"NO AI          "}, 0},
+                (Options_button){Easy, (char[]){"EASY           "}, 0},
                 (Options_button){Normal, (char[]){"NORMAL         "}, 0},
                 (Options_button){Hard, (char[]){"HARD           "}, 0}
             };
             Options_menu ob_diff_menu = {
                 diffs,
-                0, 0, 3, 3
+                0, 0, 4, 3
             };
             current = diff_menu(&ai_diff, &ob_diff_menu, SCREEN);  
             break;
         }
         case Quit:
             clear_frame(SCREEN);
+            update_disp(SCREEN);    
             return 0;
             break;
         default:

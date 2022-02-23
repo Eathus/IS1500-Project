@@ -281,7 +281,7 @@ void draw_image_rotated(uint8_t *frame, const Image *image, Point pos, uint8_t t
 	draw_image(frame, &rotated_image, pos);
 }
 
-void draw_foreground(uint8_t *frame, const Image *image, Point pos, uint8_t forground_mode){
+void draw_foreground(uint8_t *frame, const Image *image, Point pos, pixel_status forground_mode){
 	int i, j;
 	forground_mode %= 2;
 	for (i = 0; i < image->height; ++i){
@@ -294,7 +294,7 @@ void draw_foreground(uint8_t *frame, const Image *image, Point pos, uint8_t forg
 	}
 }
 
-void draw_foreground_rotated(uint8_t *frame, const Image *image, Point pos, uint8_t forground_mode, uint8_t turns, uint8_t clockwise){
+void draw_foreground_rotated(uint8_t *frame, const Image *image, Point pos, pixel_status forground_mode, uint8_t turns, uint8_t clockwise){
 	int i, j;
 	Image rotated_image;
 	uint8_t im[image->height*image->width];
@@ -302,6 +302,16 @@ void draw_foreground_rotated(uint8_t *frame, const Image *image, Point pos, uint
 	copy_image(image, &rotated_image);
 	rotate_image(&rotated_image, turns, clockwise);
 	draw_foreground(frame, &rotated_image, pos, forground_mode);
+}
+
+void draw_rectangle(uint8_t *frame, Point pos, uint8_t width, uint8_t height, pixel_status forground_mode){
+	int i, j;
+	for (i = 0; i < height; i++)
+		for (j = 0; j < width; j++)
+			set_pixel(frame, (Point){pos.x + j, pos.y + i}, forground_mode);	
+}
+void draw_square(uint8_t *frame, Point pos, uint8_t width, pixel_status forground_mode){
+	draw_rectangle(frame, pos, width, width, forground_mode);
 }
 
 void update_disp(uint8_t *frame){

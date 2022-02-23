@@ -40,8 +40,11 @@ void invert_string(uint8_t *frame, uint8_t line, uint8_t len);
 uint8_t get_image_pixel(Point coords, const Image *image);
 void draw_image(uint8_t *frame, const Image *image, Point pos);
 void draw_image_rotated(uint8_t *frame, const Image *image, Point pos, uint8_t turns, uint8_t clockwise);
-void draw_foreground(uint8_t *frame, const Image *image, Point pos, uint8_t forground_mode);
-void draw_foreground_rotated(uint8_t *frame, const Image *image, Point pos, uint8_t forground_mode, uint8_t turns, uint8_t clockwise);
+void draw_foreground(uint8_t *frame, const Image *image, Point pos, pixel_status forground_mode);
+void draw_foreground_rotated(uint8_t *frame, const Image *image, Point pos, pixel_status forground_mode, uint8_t turns, uint8_t clockwise);
+
+void draw_rectangle(uint8_t *frame, Point pos, uint8_t width, uint8_t height, pixel_status forground_mode);
+void draw_square(uint8_t *frame, Point pos, uint8_t width, pixel_status forground_mode);
 
 void update_disp(uint8_t *frame);
 

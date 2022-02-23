@@ -108,9 +108,14 @@ void draw_level(difficulty level){
     draw_image(SCREEN, &obs5, (Point){110, 0});
     break;
   }
-  case Hard:
-    /* code */
-    break;
+  case Hard:{
+      int i, j;
+      draw_square(SCREEN, (Point){51, 5}, 9, On);
+      draw_square(SCREEN, (Point){51, 20}, 9, On);
+      draw_square(SCREEN, (Point){67, 5}, 9, On);
+      draw_square(SCREEN, (Point){67, 20}, 9, On);
+      break;
+    }
   default:
     break;
   }
@@ -225,12 +230,13 @@ game_state snake_game(difficulty ai, difficulty level, int *current_score){
         //tick( &mytime );
         /* Increment the pointer as the count goes */
         *porte+=1;  
-        snake_state pstate = update_snake(player_head, player_tail, &food_pos, &grow_player, snakes, SCREEN);
+        snake_state pstate = update_player_snake(player_head, player_tail, &food_pos, &grow_player, snakes, SCREEN);
         
         //AI
         if(ai_alive){
           snake_state ai_state;
           Point check_dists;
+          int mistake_chance = 0;
           switch (ai)
           {
           case Hard:{
@@ -238,13 +244,30 @@ game_state snake_game(difficulty ai, difficulty level, int *current_score){
             break;
           }
           case Normal:
-            check_dists = (Point){1, 1};
+            check_dists = (Point){16, 4};
+            break;
+          case Easy:
+            check_dists = (Point){16, 4};
+            mistake_chance = 5;
             break;
           default:
             break;
           }
           if(frame_update == SEGMENT_SIZE){
-            direction ai_dir = snake_ai(ai_head, ai_tail, food_pos, check_dists, snakes, SCREEN, 0);
+            direction ai_dir;
+            if(mistake_chance != 0 && abs(irand(player_tail, ai_head)) % 100 < mistake_chance){
+              ai_dir = abs(irand(player_tail, ai_head)) % 4;
+              /*int i;
+              Point ret[SEGMENT_SIZE];
+              get_rotated(get_unit(*ai_head, snakes), ai_dir, ai_head, ret);
+              for(i = 0; i < SEGMENT_SIZE; ++i){
+                if(status_ahead(ai_dir, ret, i + 1, food_pos, SCREEN) == Dead){
+                  ai_dir = snake_ai(ai_head, food_pos, check_dists, snakes, SCREEN);
+                  break;
+                }
+              }*/
+            }
+            else ai_dir = snake_ai(ai_head, food_pos, check_dists, snakes, SCREEN);
             qpush(ai_dir, &ai_dir_buffer, 1);
             uint8_t dir_change = qpop(&ai_dir_buffer);
             if(dir_change != -1) change_dir(dir_change, ai_head, snakes);
@@ -302,7 +325,7 @@ game_state snake_game(difficulty ai, difficulty level, int *current_score){
 
 
 
-
+/*
 game_state ai_snake_game(difficulty level_diff, int *current_score){
   uint16_t snakes[128*4];
   Point head[SEGMENT_SIZE];
@@ -314,7 +337,7 @@ game_state ai_snake_game(difficulty level_diff, int *current_score){
   spawn_snake(tail, head, 10, Left, snakes, SCREEN);
   int i, j;
 
-  /*
+  
   for(i = 0; i < 26; ++i){
     for(j = 0; j < 25; ++j){
       set_pixel((Point){j + 51, i + 5}, On);
@@ -354,7 +377,7 @@ game_state ai_snake_game(difficulty level_diff, int *current_score){
       set_pixel((Point){j + 67, i + 20}, On);
     }
   }
-  */
+  
   int update_counter = 0;
   direction queue[SEGMENT_SIZE];
   Dir_queue dir_buffer = {SEGMENT_SIZE, -1, queue};
@@ -366,11 +389,11 @@ game_state ai_snake_game(difficulty level_diff, int *current_score){
   uint16_t rand_count = 0;  
   int ai_counter = 0;
   uint8_t ai_switch = 0;
-  /* Declaring the volatile pointer porte*/
+  
   volatile int* porte = (volatile int*) 0xbf886110;
-  /* Initialize as 0 */
+  
   *porte = 1;
-  /* Variables to handle input */
+  
   int btn;
 
   while (1)
@@ -384,10 +407,10 @@ game_state ai_snake_game(difficulty level_diff, int *current_score){
     if(update_counter == 1){
       update_counter = 0;
       if(frame_update == SEGMENT_SIZE){
-        /*if(ai_counter == 50){
+        if(ai_counter == 50){
           ai_counter = 0;
           ai_switch = ai_switch == 0 ? 1 : 0;
-        }*/
+        }
         direction ai_dir = snake_ai(head, tail, food_pos, (Point){127, 31}, snakes, SCREEN, ai_switch);
         //++ai_counter;
         qpush(ai_dir, &dir_buffer, 1);
@@ -395,7 +418,7 @@ game_state ai_snake_game(difficulty level_diff, int *current_score){
         if(dir_change != -1) change_dir(dir_change, head, snakes);
         frame_update = 0;
       }
-      snake_state ai_state = update_snake(head, tail, &food_pos, &grow_ai, snakes, SCREEN);
+      snake_state ai_state = update_ai_snake(head, tail, &food_pos, &grow_ai, snakes, SCREEN);
       switch (ai_state)
       {
       case Dead: case Full:
@@ -414,7 +437,7 @@ game_state ai_snake_game(difficulty level_diff, int *current_score){
       frame_update++;
     }
   }
-  
+  */
   /*
   while (1){
     int inter_flag = (IFS(0) & 0x100) >> 8;
@@ -483,5 +506,6 @@ game_state ai_snake_game(difficulty level_diff, int *current_score){
         frame_update++;
     }
   }
-  */
+
 }
+*/
