@@ -96,18 +96,6 @@ uint8_t is_food(Point pos, Point food_pos){
     }
     return 0;
 }
-//may implement is_food here later
-/*uint8_t eat_check(Point *head, Point const *food_pos){
-    int i, j, k;
-    for(i = 0; i < SEGMENT_SIZE; ++i){
-        for(j = 0; j < SEGMENT_SIZE; ++j){
-            Point fpos = {(food_pos->x + j) %  STRIPE_COLS, (food_pos->y + i) % ROWS};
-            for(k = 0; k < SEGMENT_SIZE; ++k)
-                if(point_equal(&fpos, head + k)) return 1;
-        }
-    }   
-    return 0;
-}*/
 void toggle_food(uint8_t *frame, pixel_status stat, Point const *food_pos){
     int i, j;
     for(i = 0; i < SEGMENT_SIZE; ++i){

@@ -26,6 +26,15 @@
 //Array representing screen matrix everything will appear on
 uint8_t SCREEN[128*4];
 
+/*
+*	Function:	clear_frame
+*	-----------------------
+*	clears a frame (turns all teh pixels off)
+*
+*	frame:  array representing a screen matrix
+*
+*	returns: void
+*/
 void clear_frame(uint8_t *frame){
 	int i;
 	for(i = 0; i < SCREEN_LEN; ++i){
