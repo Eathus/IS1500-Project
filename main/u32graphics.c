@@ -1,9 +1,13 @@
 #include "u32graphics.h"
 #include "data.h"
 
+//How many stripes columns per row on the screen
 #define STRIPE_COLS 128
+//bit/pixel length of a stripe
 #define STRIPE_BIT_LEN 8
+//how many rows of tripes the physcal screen has
 #define STRIPE_ROWS 4
+//total stripes on physical screen
 #define SCREEN_LEN 128 * 4
 
 //defines copied from lab 3
