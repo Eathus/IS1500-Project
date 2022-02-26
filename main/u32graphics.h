@@ -7,12 +7,34 @@
 extern uint8_t SCREEN[128*4];
 #define ROW_CHAR_LEN ( 16 )
 
+//status of a pixel (on or off)
 typedef enum pixel_status{Off, On} pixel_status;
+//major of a matrix (row or column major)
 typedef enum mat_major{Row, Column} mat_major;
+
+/*
+*	Struct:	Point
+*	-----------------------
+*	A point with x and y coordinates
+*	
+*	x: x-coordinate
+*	y: y-coordinate
+*/
 typedef struct Point {
     uint8_t x, y;
 } Point;
 
+/*
+*	Struct:	Image
+*	-----------------------
+*	An image to draw on a frame 
+*	
+*	im_major:  is the matrix representing the image
+*	column major or row major
+*	width: width of image in pixels
+*	height: height of image in pixels
+*	image: array representing the image matrix
+*/
 typedef struct Image{
 	mat_major im_major;
 	uint8_t width;

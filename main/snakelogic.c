@@ -431,8 +431,7 @@ uint8_t is_segment(Point pos, const Point *segment){
 int obstacle_distance(direction dir, const Point* head, Point food_pos, Point check_dists, uint8_t *frame){
     int i;
     int distance;
-    switch (dir)
-    {
+    switch (dir){
     case Up: case Down:
         distance = check_dists.y;
         break;
@@ -442,8 +441,7 @@ int obstacle_distance(direction dir, const Point* head, Point food_pos, Point ch
     }
     for(i = 0; i < distance; ++i){
         snake_state state = status_ahead(dir, head, i + 1, food_pos, frame);
-        switch (state)
-        {
+        switch (state){
         case Dead:
             return i + 1;
         case Ate: return 255;
