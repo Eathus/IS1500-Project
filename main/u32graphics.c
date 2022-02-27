@@ -41,6 +41,7 @@ void clear_frame(uint8_t *frame){
 		frame[i] = 0;
 	}
 }
+
 /*
 *	Function:	insert_bit
 *	----------------------

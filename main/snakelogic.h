@@ -3,20 +3,32 @@
 #include <stdint.h>   /* Declarations of uint_32 and the like */
 #include <pic32mx.h>  /* Declarations of system-specific addresses etc */
 
+//width of the snake in pixels
 #define SEGMENT_SIZE 2 
+//max length of the name of a player for when saving their score
 #define MAX_NAME_LEN ( 10 )
 
-extern Point HEAD_PLAYER[SEGMENT_SIZE];
-extern Point TAIL_PLAYER[SEGMENT_SIZE];
-
-extern Point HEAD_AI[SEGMENT_SIZE];
-extern Point TAIL_AI[SEGMENT_SIZE];
-
-extern Point FOOD_POS;
-
+//a possible direction in the game for a snake to move
 typedef enum direction{Right, Left, Up, Down} direction;
+
+/*
+state of the snake. Growing means that it just ate and is still getting
+loner on this frame so the tail won't receed. Ate means that it's eating
+on this frame and full means that the player has maxed out the size of 
+the snake and theres no more space for food to spawn.
+*/
 typedef enum snake_state{Alive, Ate, Growing, Dead, Full} snake_state;
 
+/*
+*	Struct:	Score
+*	-------------
+*   Score of the player playing the current round
+*
+*   name: name of the player (maximum 10 characters)
+*   score: score of the player
+*   disp_string: string to actually display on the scoreboard
+*   (a combination of the name and score usually)
+*/
 typedef struct Score{
     char name[MAX_NAME_LEN + 1];
     int score;
