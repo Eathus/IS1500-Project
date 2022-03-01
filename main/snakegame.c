@@ -37,6 +37,14 @@ void user_isr( void )
 }
 
 /* Lab-specific initialization goes here */
+/*
+*	Function:	game_init
+*	--------------------
+*	doing necessary chikit startup routines to make sure it works 
+* correctly
+*
+*	returns: void
+*/
 void game_init( void )
 {
   float periodms = 0.01;
@@ -75,13 +83,16 @@ void game_init( void )
   return;
 }
 
-/*Point prand(){
-    Point ret;
-    ret.x = (TMR3 + TAIL_PLAYER->x * HEAD_PLAYER->x) % (128 - SEGMENT_SIZE + 1);
-    ret.y = (TMR4 + TAIL_PLAYER->y * HEAD_PLAYER->y) % (32 - SEGMENT_SIZE + 1);
-    return ret;
-}*/
-
+/*
+*	Function:	draw_level
+*	--------------------
+* draw a level based on difficulty level before 
+* game starts  
+*
+* level: difficulty currently selecting
+*
+*	returns: void
+*/
 void draw_level(difficulty level){
   switch (level)
   {
@@ -122,19 +133,61 @@ void draw_level(difficulty level){
 
 }
 
+/*
+*	Struct:	Dir_queue
+*	-------------------
+* queue structure (first in first out) for directions of snake
+* used for direction buffer to buffer inputs
+* and make sure a snake only gets to move every 2 pixel movements
+*
+* size: size of the queue
+* last: current index of the last item in the queue 
+* (< 0 if theres no items in the queue)
+* queue: actual array for the queue
+*/
 typedef struct Dir_queue {
   uint8_t size;
   int8_t last;
   direction *queue;
 } Dir_queue;
 
+/*
+*	Function:	qpush
+*	---------------
+* push direction to the back of the queue
+*
+* dir: direction snake wants to go
+* queue: current queue
+* replace: if replace is active (1) when queue is full 
+* replace first direction in the queue (on index 0) with new direction 
+*
+*	returns: void
+*/
 void qpush(direction dir, Dir_queue *queue, uint8_t replace){
   if(queue->last < queue->size - 1) {
-    queue->last++;
-    queue->queue[queue->last] = dir;
+    if(queue->last < 0){
+      queue->last++;
+      queue->queue[queue->last] = dir;
+    }
+    else if (queue->queue[queue->last] != dir){
+      queue->last++;
+      queue->queue[queue->last] = dir;
+    }
   }
   else if (replace) queue->queue[0] = dir;
 }
+
+/*
+*	Function:	qpop
+*	---------------
+* pop direction to from front of queue 
+* to get access to that direction
+*
+* queue: current queue
+*
+*	returns: direction in front of the queue 
+* (according to first in first out order)
+*/
 uint8_t qpop(Dir_queue *queue){
   if(queue->last < 0) return -1; 
   int i;
@@ -146,12 +199,25 @@ uint8_t qpop(Dir_queue *queue){
   return ret;
 }
 
+/*
+*	Function:	snake_game
+*	--------------------
+* main function controling the entire snake game
+*
+* ai: difficulty: level of the AI
+* level: difficulty: level of the current level/obstiacls
+* current_score: storage variable to keep track on the players
+* current score
+*
+*	returns: where to go in the program after a game is over
+*/
 /* This function is called repetitively from the main program */
 game_state snake_game(difficulty ai, difficulty level, int *current_score){
   if(level != None) draw_level(level);
   uint8_t ai_alive = ai;
   
   uint16_t snakes[128*4];
+  
   //AI
   uint8_t ai_tracker[128*4];
   clear_frame(ai_tracker);
@@ -185,141 +251,135 @@ game_state snake_game(difficulty ai, difficulty level, int *current_score){
   toggle_food(SCREEN, On, &food_pos);
   uint8_t grow_player = 0;
 
-  /* Declaring the volatile pointer porte*/
-  volatile int* porte = (volatile int*) 0xbf886110;
-  /* Initialize as 0 */
-  *porte = 0;
   /* Variables to handle input */
   int btn;
   while (1){
-    /* Active choice to have delay at the top of the loop for easier track keeping*/
-    //delay( 1000 );
     int inter_flag = (IFS(0) & 0x100) >> 8;
     btn = getbtns();
     if(inter_flag){
         IFS(0) &= (unsigned int)(~0x100);
         ++update_counter;
     }   
+    /* Update input outside of check for update counter for best responsiveness*/
+    //Player
+    /* BTN4 - AND with corresponding bit*/
+    if (btn & 0x8) {
+      qpush(Left, &player_dir_buffer, 1);
+    } 
+    /* BTN3 - AND with corresponding bit*/
+    if (btn & 0x4) {
+      qpush(Right, &player_dir_buffer, 1);
+    }
+    /* BTN2 - AND with corresponding bit*/
+    if(btn & 0x2) {
+      qpush(Up, &player_dir_buffer, 1);
+    }
+    /* BTN1 - AND with corresponding bit*/
+    if (btn & 0x1) {
+      qpush(Down, &player_dir_buffer, 1);
+    }
+
     if(update_counter == 5){
-        update_counter = 0;
-        /* Update input */
-        //Player
-        /* All of these are if statements since they can all be updated at once- not exclusive.
-        BTN4 - AND with corresponding bit */
-        if (btn & 0x8) {
-          qpush(Left, &player_dir_buffer, 1);
-        } 
-        /* BTN3 - AND with corresponding bit*/
-        else if (btn & 0x4) {
-          qpush(Right, &player_dir_buffer, 1);
+      update_counter = 0;
+      if(frame_update == SEGMENT_SIZE){
+        uint8_t dir_change = qpop(&player_dir_buffer);
+        if(dir_change != -1) change_dir(dir_change, player_head, snakes);
+        if(!ai_alive) frame_update = 0;
+      }
+      snake_state pstate = update_player_snake(player_head, player_tail, &food_pos, &grow_player, snakes, SCREEN);
+      
+      //AI
+      if(ai_alive){
+        snake_state ai_state;
+        Point check_dists;
+        int mistake_chance = 0;
+        switch (ai)
+        {
+        case Hard:{
+          check_dists = (Point){127, 31};
+          break;
         }
-        /* BTN2 - AND with corresponding bit*/
-        else if(btn & 0x2) {
-          qpush(Up, &player_dir_buffer, 1);
-        }
-        /* BTN1 - AND with corresponding bit*/
-        else if (btn & 0x1) {
-          qpush(Down, &player_dir_buffer, 1);
+        case Normal:
+          check_dists = (Point){48, 10};
+          mistake_chance = 10;
+          break;
+        case Easy:
+          check_dists = (Point){16, 4};
+          mistake_chance = 30;
+          break;
+        default:
+          break;
         }
         if(frame_update == SEGMENT_SIZE){
-          uint8_t dir_change = qpop(&player_dir_buffer);
-          if(dir_change != -1) change_dir(dir_change, player_head, snakes);
-          if(!ai_alive) frame_update = 0;
-        }
-        //update_disp();
-        //tick( &mytime );
-        /* Increment the pointer as the count goes */
-        *porte+=1;  
-        snake_state pstate = update_player_snake(player_head, player_tail, &food_pos, &grow_player, snakes, SCREEN);
-        
-        //AI
-        if(ai_alive){
-          snake_state ai_state;
-          Point check_dists;
-          int mistake_chance = 0;
-          switch (ai)
-          {
-          case Hard:{
-            check_dists = (Point){127, 31};
-            break;
-          }
-          case Normal:
-            check_dists = (Point){48, 10};
-            mistake_chance = 10;
-            break;
-          case Easy:
-            check_dists = (Point){16, 4};
-            mistake_chance = 30;
-            break;
-          default:
-            break;
-          }
-          if(frame_update == SEGMENT_SIZE){
-            direction ai_dir;
-            if(mistake_chance != 0 && abs(irand(player_tail, ai_head)) % 100 < mistake_chance){
-              ai_dir = abs(irand(player_tail, ai_head)) % 4;
-              int i;
-              Point ret[SEGMENT_SIZE];
-              get_rotated(get_unit(*ai_head, snakes), ai_dir, ai_head, ret);
-              for(i = 0; i < SEGMENT_SIZE; ++i){
-                if(status_ahead(ai_dir, ret, i + 1, food_pos, SCREEN) == Dead){
-                  ai_dir = snake_ai(ai_head, food_pos, check_dists, snakes, SCREEN);
-                  break;
-                }
+          direction ai_dir;
+          //makes snanke choose random direction once in a while without logic to decrease it's difficulty
+          if(mistake_chance != 0 && abs(irand(player_tail, ai_head)) % 100 < mistake_chance){
+            ai_dir = abs(irand(player_tail, ai_head)) % 4;
+            int i;
+            //make sure the snake doesn't randomly kill itself when randomly choosing direction
+            Point ret[SEGMENT_SIZE];
+            get_rotated(get_unit(*ai_head, snakes), ai_dir, ai_head, ret);
+            for(i = 0; i < SEGMENT_SIZE; ++i){
+              if(status_ahead(ai_dir, ret, i + 1, food_pos, SCREEN) == Dead){
+                ai_dir = snake_ai(ai_head, food_pos, check_dists, snakes, SCREEN);
+                break;
               }
             }
-            else ai_dir = snake_ai(ai_head, food_pos, check_dists, snakes, SCREEN);
-            qpush(ai_dir, &ai_dir_buffer, 1);
+          }
+          else ai_dir = snake_ai(ai_head, food_pos, check_dists, snakes, SCREEN);
+          qpush(ai_dir, &ai_dir_buffer, 1);
+          if(frame_update == SEGMENT_SIZE){
             uint8_t dir_change = qpop(&ai_dir_buffer);
             if(dir_change != -1) change_dir(dir_change, ai_head, snakes);
             frame_update = 0;
           }
-          ai_state = update_ai_snake(ai_head, ai_tail, &food_pos, &grow_ai, snakes, SCREEN, ai_tracker);
-          switch (ai_state)
-          {
-          case Ate:
-            if(pstate != Ate){
-              if(update_food(SCREEN, prand(player_tail, player_head), &food_pos)) return End_options;
-              toggle_food(SCREEN, On, &food_pos);
-            }
-            break;
-          case Dead:{
-            int i, j;
-            for(i = 0; i < 32; ++i){
-              for(j = 0; j < 128; ++j){
-                Point current = {j, i};
-                if(get_pixel(ai_tracker, current))
-                  set_pixel(SCREEN, current, Off);
-              }
-            }
-            ai_alive = 0;
-          }
-          default:
-            break;
-          }
         }
-
-        switch (pstate){
-          case Ate:
+        ai_state = update_ai_snake(ai_head, ai_tail, &food_pos, &grow_ai, snakes, SCREEN, ai_tracker);
+        switch (ai_state)
+        {
+        case Ate:
+          if(pstate != Ate){
             if(update_food(SCREEN, prand(player_tail, player_head), &food_pos)) return End_options;
-            //if(update_food((Point){(HEAD_PLAYER[0].x + 5) %128, HEAD_PLAYER[0].y})) return Full;
             toggle_food(SCREEN, On, &food_pos);
-            *current_score += level + 1;
-          break;          
-          case Dead: case Full:
-            return End_options;
-          default:
-            break;
+          }
+          break;
+        case Dead:{
+          int i, j;
+          for(i = 0; i < 32; ++i){
+            for(j = 0; j < 128; ++j){
+              Point current = {j, i};
+              if(get_pixel(ai_tracker, current))
+                set_pixel(SCREEN, current, Off);
+            }
+          }
+          ai_alive = 0;
         }
-        
-        /*
-        int len;
-        char* row_num = itoaconv(*current_score, &len);
-        write_char(SCREEN, (Point){15, 0}, row_num[0]);
-        */
+        default:
+          break;
+        }
+      }
 
-        update_disp(SCREEN); 
-        frame_update++;
+      switch (pstate){
+        case Ate:
+          if(update_food(SCREEN, prand(player_tail, player_head), &food_pos)) return End_options;
+          //if(update_food((Point){(HEAD_PLAYER[0].x + 5) %128, HEAD_PLAYER[0].y})) return Full;
+          toggle_food(SCREEN, On, &food_pos);
+          *current_score += level + 1;
+        break;          
+        case Dead: case Full:
+          return End_options;
+        default:
+          break;
+      }
+      
+      /*
+      int len;
+      char* row_num = itoaconv(*current_score, &len);
+      write_char(SCREEN, (Point){15, 0}, row_num[0]);
+      */
+
+      update_disp(SCREEN); 
+      frame_update++;
     }
   }
 }
