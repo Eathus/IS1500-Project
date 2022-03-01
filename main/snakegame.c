@@ -244,11 +244,12 @@ game_state snake_game(difficulty ai, difficulty level, int *current_score){
             break;
           }
           case Normal:
-            check_dists = (Point){16, 4};
+            check_dists = (Point){48, 10};
+            mistake_chance = 10;
             break;
           case Easy:
             check_dists = (Point){16, 4};
-            mistake_chance = 5;
+            mistake_chance = 30;
             break;
           default:
             break;
@@ -257,7 +258,7 @@ game_state snake_game(difficulty ai, difficulty level, int *current_score){
             direction ai_dir;
             if(mistake_chance != 0 && abs(irand(player_tail, ai_head)) % 100 < mistake_chance){
               ai_dir = abs(irand(player_tail, ai_head)) % 4;
-              /*int i;
+              int i;
               Point ret[SEGMENT_SIZE];
               get_rotated(get_unit(*ai_head, snakes), ai_dir, ai_head, ret);
               for(i = 0; i < SEGMENT_SIZE; ++i){
@@ -265,7 +266,7 @@ game_state snake_game(difficulty ai, difficulty level, int *current_score){
                   ai_dir = snake_ai(ai_head, food_pos, check_dists, snakes, SCREEN);
                   break;
                 }
-              }*/
+              }
             }
             else ai_dir = snake_ai(ai_head, food_pos, check_dists, snakes, SCREEN);
             qpush(ai_dir, &ai_dir_buffer, 1);

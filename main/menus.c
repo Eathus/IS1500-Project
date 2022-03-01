@@ -2,14 +2,37 @@
 #include "string.h"
 #include "stdio.h"
 
+//how many characters fit in a row on the screen
 #define CHAR_ROW_SIZE 16
+//number of rows on the screen
 #define NUM_ROWS 4
 
-
+/*
+*	Function:	abs
+*	---------------
+*	Calculate the absolute value of an integer
+*
+*   val: value to calculate absolute value of
+*
+*	returns: absolute value
+*/
 int abs(int val){
     return val < 0 ? val * (-1) : val;
 }
 
+/*
+*	Function:	keyboard_move
+*	-------------------------
+*	move cursor in keyboard menu
+*
+*	dir: 2-dimensional direction to move in the menu
+* 	index: current index pointing to the butten currently
+*   selected through the "keyboard" array
+*   keyboard: array of all the buttons on the keyboard
+*	len: length of the keyboard array
+*
+*	returns: void
+*/
 void keyboard_move(direction dir, uint8_t *index, Keyboard_button const *keyboard, uint8_t len){
     int i = 0;
     uint8_t current_y = keyboard[*index].pos.y;
@@ -59,6 +82,20 @@ void keyboard_move(direction dir, uint8_t *index, Keyboard_button const *keyboar
     }
 }
 
+/*
+*	Function:	update_keyboard
+*	---------------------------
+*	Update keyboard based on current position of the cursor
+*   (button the cursor is hovering over)
+*
+* 	index: current index pointing to the butten currently
+*   selected through the "keyboard" array
+*   keyboard: array of all the buttons on the keyboard
+*	len: length of the keyboard array
+*   frame: array representing a screen matrix
+*
+*	returns: void
+*/
 void update_keyboard(uint8_t index, Keyboard_button const *keyboard, uint8_t len, uint8_t *frame){
     int i;
     switch(keyboard[index].type){
@@ -71,6 +108,18 @@ void update_keyboard(uint8_t index, Keyboard_button const *keyboard, uint8_t len
             break;
     }
 }
+/*
+*	Function:	get_caps
+*	--------------------
+*	get uppercase ascii decimal value from a lowercase letter
+*   or the next 5 decimals after 4 in order to have a caps lock
+*   mode to teh keyboard
+*
+* 	type: wether we are converting a letter or a decimal
+*   ch: ascii decimal value of letter or decimal
+*
+*	returns: converted ascii character decimal value
+*/
 char get_caps(button_type type, char ch){
     switch (type)
     {
@@ -80,12 +129,44 @@ char get_caps(button_type type, char ch){
         return ch + 5;
     }
 }
+
+/*
+*	Function:	mod_sub
+*	-------------------
+*	modulo subtraction function 
+*   (when we go lower than zero it loops) helps with movement
+*   across menus so that they can loop in different ways
+*   
+*   
+*
+* 	left: left hand side of subtraction
+* 	right: right hand side of subtraction
+*   len: modulo (when to loop)
+*
+*	returns: result of calculation
+*/
 int mod_sub(int left, int right, int len){
     int res = left - right;
     int diff = abs(res) % len;
     if(res < 0) res = len - (diff == 0 ? len : diff);
     return res;
 }
+
+/*
+*	Function:	draw_kb_button
+*	--------------------------
+*	draw all the keyboard buttons (menu) on the screen matrix
+*   
+* 	index: current index pointing to the butten currently
+*   selected through the "keyboard" array
+*   keyboard: array of all the buttons on the keyboard
+*	len: length of the keyboard array
+*   caps: wether to write caps locked version (1) or
+*   normal version (0) of keyboard
+*   frame: array representing a screen matrix
+*
+*	returns: void
+*/
 void draw_kb_button(uint8_t index, Keyboard_button const *keyboard, uint8_t len, uint8_t caps, uint8_t *frame){
     int i;
     char ch;
@@ -103,26 +184,42 @@ void draw_kb_button(uint8_t index, Keyboard_button const *keyboard, uint8_t len,
             break;
     }
 }
+
+/*
+*	Function:	draw_keyboard
+*	-------------------------
+*	draw the entire keyboard meant for saving your name 
+*   when saving a score
+*   
+* 	index: current index pointing to the butten currently
+*   selected through the "keyboard" array
+*   keyboard: array of all the buttons on the keyboard
+*	len: length of the keyboard array
+*   caps: wether to write caps locked version (1) or
+*   normal version (0) of keyboard
+*   frame: array representing a screen matrix
+*
+*	returns: void
+*/
 void draw_keyboard(Keyboard_button const *keyboard, uint8_t len, uint8_t caps, uint8_t *frame){
     int i;
     for(i = 0; i < len; ++i){
         draw_kb_button(i, keyboard, len, caps, frame);
     }
 }
+
 /*
-void draw_options(Options_menu const *menu){
-    int i;
-    char empty = '\n';
-    if(menu->len < menu->page_len)
-        for(i = 0; i < menu->page_len; ++i){
-            if(menu->len <= i) write_row(i + 4 - menu->page_len, &empty);
-            else write_row(i + 4 - menu->page_len, menu->options[(menu->start + i)].text);
-        }
-    else{
-        for(i = menu->start; i < menu->start + menu->page_len; ++i)
-            write_row(mod_sub(i, menu->start, menu->len) + 4 - menu->page_len, menu->options[i % menu->len].text);
-    }
-}
+*	Function:	draw_options
+*	------------------------
+*	draw a generall options menu 
+*   (a scroll through menu with a bunch of different options)
+*   
+* 	menu: actual options to display aswell ass information
+*   about those options through the Options_menu struct
+*   selected through the "keyboard" array
+*   frame: array representing a screen matrix
+*
+*	returns: void
 */
 void draw_options(Options_menu const *menu, uint8_t *frame){
     int i;
@@ -136,32 +233,22 @@ void draw_options(Options_menu const *menu, uint8_t *frame){
         }
     }
 }
-/*void options_button_scroll(direction dir, uint8_t *index, uint8_t *start, Options_button const * options, uint8_t len) {
-    uint8_t prev_page = 0;
-    switch(dir) {
-        case Up:
-            if(*index == *start) prev_page = 1;
-            *index = mod_sub(*index, 1, len);
-            if(prev_page){
-                prev_page = 0;
-                *start = mod_sub(*start, 4, len);
-                draw_options(options, *start, len);
-            }
-            break;
-        case Down:
-            *index = (*index + 1) % len;
-            if(*index == (*start + 4) % len){
-                *start = mod_sub(*index, 3, len);
-                draw_options(options, *start, len);
-            }
-            break;
-    }
-}*/
 
-//in case usefull;
-//draw_options(&(Options_menu){menu->options, menu->start, menu->index, menu->len % menu->page_len, menu->page_len});
-//draw_options(&(Options_menu){menu->options, menu->start, menu->index, menu->len - menu->index, menu->page_len});
-
+/*
+*	Function:	options_page_scroll
+*	-------------------------------
+*	controll the scrolling function that allows for more options
+*   than the max screen length of a generall options menu 
+*   (a scroll through menu with a bunch of different options)
+*   
+*   dir: wether user is currently moving up or down in on the page scroll
+* 	menu: actual options to display aswell ass information
+*   about those options through the Options_menu struct
+*   selected through the "keyboard" array
+*   frame: array representing a screen matrix
+*
+*	returns: void
+*/
 void options_page_scroll(direction dir, Options_menu *menu, uint8_t *frame) {
     uint8_t prev_page = 0;
     switch(dir) {
@@ -185,14 +272,40 @@ void options_page_scroll(direction dir, Options_menu *menu, uint8_t *frame) {
             break;
     }
 }
+
+/*
+*	Function:	update_options
+*	--------------------------
+*	shows current option selected by inverting the associated row
+*   of a generall options menu 
+*   (a scroll through menu with a bunch of different options)
+*   
+* 	menu: actual options to display aswell ass information
+*   about those options through the Options_menu struct
+*   selected through the "keyboard" array
+*   frame: array representing a screen matrix
+*
+*	returns: void
+*/
 void update_options(Options_menu const * menu, uint8_t *frame){
     invert_row(frame, mod_sub(menu->index, menu->start, menu->len) + 4 - menu->page_len);
     char chars;
-    
-    //num32asc(&chars, menu->start);
-    //num32asc(&chars, menu->index);
-    //write_row(0, &chars);
 }
+
+/*
+*	Function:	locator_menu
+*	------------------------
+*	Main cotroll function for locator menus 
+*   (a generall menu primarilly used for locating yourself across the program)
+*   
+* 	menu: actual options to display aswell ass information
+*   about those options through the Options_menu struct
+*   selected through the "keyboard" array
+*   ret: on witch buttons to return from the menu the currently selected option
+*   frame: array representing a screen matrix
+*
+*	returns: the selected button
+*/
 uint8_t locator_menu(Options_menu * menu, io_button_inputs ret, uint8_t *frame){
     int btn;
     int update_counter = 0;
@@ -212,13 +325,11 @@ uint8_t locator_menu(Options_menu * menu, io_button_inputs ret, uint8_t *frame){
                 clear_frame(frame);
                 return menu->options[menu->index].option;
             }
-            /* BTN2 - AND with corresponding bit*/
             else if(btn & 0x2) {
                 update_options(menu, frame);
                 options_page_scroll(Up, menu, frame);
                 update_options(menu, frame);
             }
-            /* BTN1 - AND with corresponding bit*/
             else if (btn & 0x1) {
                 update_options(menu, frame);
                 options_page_scroll(Down, menu, frame);
@@ -229,15 +340,22 @@ uint8_t locator_menu(Options_menu * menu, io_button_inputs ret, uint8_t *frame){
                 return btn;
             }
 
-            //int len;
-            //char* row_num = itoaconv(menu->index, &len);
-            //write_char(frame, (Point){15, 0}, row_num[0]);
-
             update_disp(frame); 
         }
     }
 }
 
+/*
+*	Function:	name_input
+*	----------------------
+*	main controll function for the score saving menu where 
+*   user writes there name using a keyboard
+*   
+* 	name: storage variable for the name being saved by the user
+*   frame: array representing a screen matrix
+*
+*	returns: where to o next in the program after finishing name input
+*/
 game_state name_input(char *name, uint8_t *frame){
     char upper[3] = {1, 8, 3};
     const Keyboard_button const keyboard[] = {
@@ -401,6 +519,18 @@ game_state name_input(char *name, uint8_t *frame){
     }
 }
 
+/*
+*	Function:	top_score
+*	---------------------
+*	Checks wether a score is a top score or not 
+*   (should be on top score list)
+*   
+* 	board: score board
+*   score: score to check
+*
+*	returns: score position if it's a top score
+*   otherwise returns -1
+*/
 int top_score(Sboard const *board, int score) {
   int i;
   for(i = 0; i < board->max_len; i++) 
@@ -410,6 +540,18 @@ int top_score(Sboard const *board, int score) {
   return -1;
 }
 
+/*
+*	Function:	assign_string
+*	-------------------------
+*	copy string into another pointer variable
+*   
+* 	left: storage variable for copy of string
+*   right: string to copy
+*   keep_end: wether to keep null character at the end 
+*   of string (1) or not (0)
+*
+*	returns: void
+*/
 void assign_string(char *left, char const *right, uint8_t keep_end){
     int i;
     for(i = 0; right[i] != 0; ++i){
@@ -417,11 +559,35 @@ void assign_string(char *left, char const *right, uint8_t keep_end){
     }
     if(keep_end) left[i] = 0;
 }
+
+/*
+*	Function:	fill_string
+*	-----------------------
+*	fill string with a certain characther
+*   (usefull forfilling string with space)
+*   
+* 	ch: what to fill string with
+*   right: string to copy
+*   len: length of string
+*
+*	returns: void
+*/
 void fill_string(char ch, char *str, int len){
     int i;
     for(i = 0; i < len; ++i) str[i] = ch;
 }
 
+/*
+*	Function:	insert_score
+*	------------------------
+*	Insert a score into scoreboard from top score to
+*   bottom score
+*   
+* 	board: score board
+*   score: score to insert
+*
+*	returns: void
+*/
 void insert_score(Sboard *board, Score const *score){
   int i;
   int pos = top_score(board, score->score);
@@ -442,6 +608,18 @@ void insert_score(Sboard *board, Score const *score){
   assign_string(board->board[pos].disp_stirng + (CHAR_ROW_SIZE - num_len), number, 1);
 }
 
+/*
+*	Function:	score_board_menu
+*	----------------------------
+*	main function for score board menu
+*   where you can check all the top scores
+*   
+* 	board: score board
+*   frame: array representing a screen matrix
+*
+*	returns: where to go in the program after 
+*   exiting the score board
+*/
 game_state score_board_menu(Sboard const *board, uint8_t *frame){
     if(board->len == 0){
         clear_frame(frame);
@@ -484,8 +662,20 @@ game_state score_board_menu(Sboard const *board, uint8_t *frame){
     return locator_menu(&menu, BTN3_4, frame);
 }
 
-#define alloca(x)__builtin_alloca(x)
-
+/*
+*	Function:	diff_menu
+*	---------------------
+*	main function for difficulty  menu
+*   where you adjust a certain difficulty setting
+*   for the game
+*   
+*   diff: variable for string current difficulty selected
+* 	menu: actual options to display aswell ass information
+*   frame: array representing a screen matrix
+*
+*	returns: where to go in the program after 
+*   exiting the difficulty menu
+*/
 game_state diff_menu(difficulty * diff, Options_menu * menu, uint8_t *frame){
     Image difficulty_help = {
         Row, 128, 8, DIFFICULTY_HELP

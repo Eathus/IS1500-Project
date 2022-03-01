@@ -654,6 +654,8 @@ void draw_square(uint8_t *frame, Point pos, uint8_t width, pixel_status forgroun
 	draw_rectangle(frame, pos, width, width, forground_mode);
 }
 
+uint8_t spi_send_recv(uint8_t data);
+
 /*
 *	Function:	update_disp
 *	-----------------------
