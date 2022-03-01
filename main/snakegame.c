@@ -371,12 +371,6 @@ game_state snake_game(difficulty ai, difficulty level, int *current_score){
         default:
           break;
       }
-      
-      /*
-      int len;
-      char* row_num = itoaconv(*current_score, &len);
-      write_char(SCREEN, (Point){15, 0}, row_num[0]);
-      */
 
       update_disp(SCREEN); 
       frame_update++;
