@@ -1,6 +1,7 @@
 
 #include "u32graphics.h"
 
+//fonts for writing to the screen
 const uint8_t const FONT[] = {
 	0, 0, 0, 0, 0, 0, 0, 0,
 	255, 129, 129, 129, 129, 129, 129, 129,
@@ -132,6 +133,7 @@ const uint8_t const FONT[] = {
 	0, 120, 68, 66, 68, 120, 0, 0,
 };
 
+//help instructions for difficulty menus
 uint8_t DIFFICULTY_HELP[] = {
 	127, 73, 73, 54, 1, 1, 127, 1,
 	1, 0, 127, 2, 4, 8, 127, 0, 24, 
@@ -149,6 +151,7 @@ uint8_t DIFFICULTY_HELP[] = {
 	0, 34, 0, 16, 48, 127, 48, 16 
 };
 
+//help instructions for score board
 uint8_t SCOREBOARD_HELP[] = {
 	127, 73, 73, 54, 1, 1, 127, 1,
 	1, 0, 127, 2, 4, 8, 127, 0, 24, 
@@ -165,6 +168,7 @@ uint8_t SCOREBOARD_HELP[] = {
 	0, 34, 0, 16, 48, 127, 48, 16 
 };
 
+//help instructions for locator menus
 uint8_t LOCATOR_MENU_HELP[] = {
 	127, 73, 73, 54, 1, 1, 127, 1,
 	1, 0, 127, 2, 4, 8, 127, 0, 24, 
@@ -181,7 +185,7 @@ uint8_t LOCATOR_MENU_HELP[] = {
 	0, 34, 0, 16, 48, 127, 48, 16 
 };
 
-
+//different obsticals for designing levels
 uint8_t HANG_OBSTICAL1[] = {
 	7, 255, 255, 255, 255,
 	0, 15, 15, 15, 3
@@ -207,6 +211,7 @@ uint8_t HANG_OBSTICAL5[] = {
 	255, 255, 127, 127
 };
 
+//Title of the game, first screen to pop up when starting application
 uint8_t START_SCREEN_TITLE[] = {
 	240, 248, 156, 14, 6, 6, 6, 6, 14, 28, 
 	56, 48, 48, 240, 240, 0, 192, 192, 254, 
@@ -246,6 +251,7 @@ uint8_t START_SCREEN_TITLE[] = {
 	0, 0, 0, 0, 0,
 };
 
+//Click any key to continue statement
 uint8_t CONTINUE[] = {
 	0, 0, 124, 130, 130, 130, 68, 0, 254, 128, 128, 128,
 	0, 130, 254, 130, 0, 124, 130, 130, 130, 68, 0, 254, 
