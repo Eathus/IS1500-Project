@@ -54,7 +54,7 @@ int main(void){
     init_disp();
     game_init();
     
-    game_state current = Main;
+    game_state current = Start;
     int current_score = 0;
     Score scores[10];
     Sboard score_board = {scores, 0, 10};
@@ -72,7 +72,8 @@ int main(void){
         switch (current)
         {
         case Start:{
-            //Put start screen code here
+            start_screen();
+            current = Main;
             break;
         }
         //Main menu that apears after start screen

@@ -699,5 +699,38 @@ game_state diff_menu(difficulty * diff, Options_menu * menu, uint8_t *frame){
             menu->options[menu->index].text[15] = 9;
         }
     }
+}
 
+/*
+*	Function:	start_screen
+*	------------------------
+*	Main cotroll function for start screen of the program 
+*   
+*	returns: void
+*/
+void start_screen(){
+    int btn;
+    int update_counter = 0;
+    Image menu_help = {
+        Row, 128, 32, START_SCREEN
+    };
+    draw_image(SCREEN, &menu_help, (Point){0, 0});
+    update_disp(SCREEN);
+
+    while (1){
+        int inter_flag = (IFS(0) & 0x100) >> 8;
+        btn = getbtns();
+        if(inter_flag){
+            IFS(0) &= (unsigned int)(~0x100);
+            ++update_counter;
+        }
+        if(update_counter == 10){
+            update_counter = 0;
+            if(btn){
+                clear_frame(SCREEN);
+                update_disp(SCREEN);
+                return;
+            }
+        }
+    }
 }

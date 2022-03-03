@@ -10,3 +10,4 @@ extern uint8_t HANG_OBSTICAL2[];
 extern uint8_t HANG_OBSTICAL3[];
 extern uint8_t HANG_OBSTICAL4[];
 extern uint8_t HANG_OBSTICAL5[];
+extern uint8_t START_SCREEN[];

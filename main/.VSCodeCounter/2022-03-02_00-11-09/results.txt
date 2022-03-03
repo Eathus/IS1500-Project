@@ -1,0 +1,44 @@
+Date : 2022-03-02 00:11:09
+Directory : /home/edvinnordqvist/Code/School/IS1500-Project/main
+Total : 17 files,  6008 codes, 1660 comments, 387 blanks, all 8055 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| C        |         10 |      3,024 |      1,581 |        330 |      4,935 |
+| hex      |          1 |      2,829 |          0 |          1 |      2,830 |
+| C++      |          5 |        103 |         66 |         35 |        204 |
+| Makefile |          1 |         52 |         13 |         21 |         86 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                               | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                  |         17 |      6,008 |      1,660 |        387 |      8,055 |
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                           | language | code       | comment    | blank      | total      |
++--------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/Makefile      | Makefile |         52 |         13 |         21 |         86 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/data.c        | C        |        197 |          0 |         11 |        208 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/data.h        | C++      |         10 |          0 |          3 |         13 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/main.c        | C        |        158 |         26 |         13 |        197 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/menus.c       | C        |        434 |        241 |         28 |        703 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/menus.h       | C++      |         42 |         45 |          9 |         96 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/outfile.hex   | hex      |      2,829 |          0 |          1 |      2,830 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/pic32mx.h     | C        |      1,092 |        160 |         86 |      1,338 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/snakegame.c   | C        |        253 |         91 |         35 |        379 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/snakegame.h   | C++      |          9 |          1 |          2 |         12 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/snakeio.c     | C        |          3 |          1 |          5 |          9 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/snakeio.h     | C++      |         11 |          1 |          2 |         14 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/snakelogic.c  | C        |        512 |        645 |         72 |      1,229 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/snakelogic.h  | C++      |         31 |         19 |         19 |         69 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/stubs.c       | C        |          7 |          8 |          6 |         21 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/u32graphics.c | C        |        329 |        387 |         58 |        774 |
+| /home/edvinnordqvist/Code/School/IS1500-Project/main/u32graphics.h | C        |         39 |         22 |         16 |         77 |
+| Total                                                              |          |      6,008 |      1,660 |        387 |      8,055 |
++--------------------------------------------------------------------+----------+------------+------------+------------+------------+

@@ -94,3 +94,4 @@ game_state score_board_menu(Sboard const *board, uint8_t *frame);
 game_state diff_menu(difficulty * diff, Options_menu * menu, uint8_t *frame);
 int top_score(Sboard const *board, int score);
 void insert_score(Sboard *board, Score const *score);
+void start_screen();
