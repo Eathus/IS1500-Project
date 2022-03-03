@@ -285,7 +285,8 @@ void invert_row(uint8_t *frame, uint8_t line){
 *	
 *	frame:  array representing a screen matrix
 *	start: on witch row and position on that row to start writing
-*	(0 <= x <= 15), (0 <= y <= 3)
+*	(0 <= x <= 15), (0 <= y <= 3), x representing character index
+*	and y, rwo index
 *	str: pointer to string to write
 *	len: length of the string to write
 *	
