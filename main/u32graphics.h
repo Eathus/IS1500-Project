@@ -56,7 +56,7 @@ void invert_char(uint8_t *frame, Point chcoord);
 void write_row(uint8_t *frame, uint8_t line, char const *str);
 void invert_row(uint8_t *frame, uint8_t line);
 
-void write_string(uint8_t *frame, uint8_t line, char const *str, uint8_t len);
+void write_string(uint8_t *frame, Point start, char const *str, uint8_t len);
 void invert_string(uint8_t *frame, uint8_t line, uint8_t len);
 
 uint8_t get_image_pixel(Point coords, const Image *image);

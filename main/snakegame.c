@@ -223,6 +223,7 @@ game_state snake_game(difficulty ai, difficulty level, int *current_score){
   clear_frame(ai_tracker);
   Point ai_head[SEGMENT_SIZE];
   Point ai_tail[SEGMENT_SIZE];
+  int ai_score = 0;
   if(ai_alive){
     ai_tail[0] = (Point){127, 14};
     spawn_snake(ai_tail, ai_head, 10, Left, snakes, SCREEN);  
@@ -257,8 +258,8 @@ game_state snake_game(difficulty ai, difficulty level, int *current_score){
     int inter_flag = (IFS(0) & 0x100) >> 8;
     btn = getbtns();
     if(inter_flag){
-        IFS(0) &= (unsigned int)(~0x100);
-        ++update_counter;
+      IFS(0) &= (unsigned int)(~0x100);
+      ++update_counter;
     }   
     /* Update input outside of check for update counter for best responsiveness*/
     //Player
@@ -339,6 +340,7 @@ game_state snake_game(difficulty ai, difficulty level, int *current_score){
         {
         case Ate:
           if(pstate != Ate){
+            ai_score += level + ai + 1;
             if(update_food(SCREEN, prand(player_tail, player_head), &food_pos)) return End_options;
             toggle_food(SCREEN, On, &food_pos);
           }
@@ -361,13 +363,40 @@ game_state snake_game(difficulty ai, difficulty level, int *current_score){
 
       switch (pstate){
         case Ate:
+          *current_score += level + ai + 1;
           if(update_food(SCREEN, prand(player_tail, player_head), &food_pos)) return End_options;
           //if(update_food((Point){(HEAD_PLAYER[0].x + 5) %128, HEAD_PLAYER[0].y})) return Full;
           toggle_food(SCREEN, On, &food_pos);
-          *current_score += level + 1;
         break;          
-        case Dead: case Full:
-          return End_options;
+        case Dead: case Full:{
+          clear_frame(SCREEN);
+          game_state ret = End_options;
+          int pscore_len;
+          char *pscore = itoaconv(*current_score, &pscore_len);
+
+          //Classic snake
+          if(ai == None){
+            write_row(SCREEN, 0, "   GAME OVER   ");
+            write_row(SCREEN, 1, "SCORE:");
+            write_string(SCREEN, (Point){16 - pscore_len, 1}, pscore, pscore_len);
+          }
+          //snake against AI if you lose you don't et to save your score
+          else{
+            if(*current_score < ai_score){
+              write_row(SCREEN, 0, "   YOU LOSE    ");
+              ret = End_options_lose;
+            }
+            else write_row(SCREEN, 0, "    YOU WIN    ");
+            write_row(SCREEN, 1, "PLAYER:");
+            write_string(SCREEN, (Point){16 - pscore_len, 1}, pscore, pscore_len);
+            write_row(SCREEN, 2, "AI:");
+            int ai_score_len;
+            char *ai_score_string = itoaconv(ai_score, &ai_score_len);
+            write_string(SCREEN, (Point){16 - ai_score_len, 2}, ai_score_string, ai_score_len);
+          }
+          wait_for_btn((Point){0, 24});
+          return ret;
+        }
         default:
           break;
       }

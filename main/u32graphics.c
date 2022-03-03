@@ -284,18 +284,19 @@ void invert_row(uint8_t *frame, uint8_t line){
 *	without overwriting the entire row
 *	
 *	frame:  array representing a screen matrix
-*	line: witch out of 4 rows to write on indexed from top as 0 
+*	start: on witch row and position on that row to start writing
 *	str: pointer to string to write
 *	len: length of the string to write
 *	
 *	returns: void
 */
-void write_string(uint8_t *frame, uint8_t line, char const *str, uint8_t len){
-	line %= 4;
+void write_string(uint8_t *frame, Point start, char const *str, uint8_t len){
+	start.y %= 4;
+	start.x %= 16;
 	int i;
 	for(i = 0; i < len; ++i){
 		if(*str & 0x80) continue;
-		write_char(frame, (Point){i, line}, *str);
+		write_char(frame, (Point){start.x + i, start.y}, *str);
 		str++;
 	}
 }

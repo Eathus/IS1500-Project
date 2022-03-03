@@ -309,18 +309,21 @@ void update_options(Options_menu const * menu, uint8_t *frame){
 uint8_t locator_menu(Options_menu * menu, io_button_inputs ret, uint8_t *frame){
     int btn;
     int update_counter = 0;
+    int delay = 30;
 
     draw_options(menu, frame);
     update_options(menu, frame);
+    update_disp(frame);
     while (1){
         int inter_flag = (IFS(0) & 0x100) >> 8;
         btn = getbtns();
         if(inter_flag){
             IFS(0) &= (unsigned int)(~0x100);
-            ++update_counter;
+            if(!btn) update_counter = delay;
+            else ++update_counter;
         }
-        if(update_counter == 10){
-            update_counter = 0;
+        if(update_counter >= delay){
+            if(btn) update_counter = 0;
             if (btn & ret) {
                 clear_frame(frame);
                 return menu->options[menu->index].option;
@@ -379,6 +382,7 @@ game_state name_input(char *name, uint8_t *frame){
     };
     int update_counter = 0;
     int blink_counter = 0;
+    int input_delay = 30;
     uint8_t frame_update = 0;
     uint8_t index = 1;   
     uint8_t const len = 35;
@@ -395,15 +399,17 @@ game_state name_input(char *name, uint8_t *frame){
         sw = getsw();
         if(inter_flag){
             IFS(0) &= (unsigned int)(~0x100);
-            ++update_counter;
+            if(!btn) update_counter = input_delay;
+            else ++update_counter;
             ++blink_counter;
         }
-        if(update_counter == 10){
-            update_counter = 0;
-            if(blink_counter >= 70){ 
-                blink_counter = 0;
-                invert_char(frame, (Point){cursor_index, 0});
-            }
+        if(blink_counter >= 70 && !(sw && btn)){ 
+            blink_counter = 0;
+            invert_char(frame, (Point){cursor_index, 0});
+            update_disp(frame);
+        }
+        if(update_counter >= input_delay){
+            if(btn) update_counter = 0;
             if (sw){
                 if(btn){
                     game_state ret;
@@ -476,7 +482,7 @@ game_state name_input(char *name, uint8_t *frame){
                         case Cancel:
                             draw_keyboard(keyboard, len, caps, frame);
                             update_keyboard(index, keyboard, len, frame);
-                            write_string(frame, 0, name, cursor_index);
+                            write_string(frame, (Point){0, 0}, name, cursor_index);
                             break;
                         default:
                             name[cursor_index] = 0;
@@ -627,6 +633,7 @@ game_state score_board_menu(Sboard const *board, uint8_t *frame){
         write_row(frame, 2, "CLICK ANY BUTTON");
         write_row(frame, 3, "TO CONTINUE");
         update_disp(frame);
+        int delay = 30;
         
         int btn;
         int update_counter = 0;
@@ -635,10 +642,11 @@ game_state score_board_menu(Sboard const *board, uint8_t *frame){
             btn = getbtns();
             if(inter_flag){
                 IFS(0) &= (unsigned int)(~0x100);
-                ++update_counter;
+                if(!btn) update_counter = delay;
+                else ++update_counter;
             }
-            if(update_counter == 10){
-                update_counter = 0;
+            if(update_counter >= delay){
+                if(btn) update_counter = 0;
                 if(btn) {
                     clear_frame(frame);
                     return Main;
@@ -702,19 +710,24 @@ game_state diff_menu(difficulty * diff, Options_menu * menu, uint8_t *frame){
 }
 
 /*
-*	Function:	start_screen
+*	Function:	wait_for_btn
 *	------------------------
 *	Main cotroll function for start screen of the program 
 *   
+*   write_start: where to start writing "click any btn to continue" text   
+*   (upper left corner)
+*
 *	returns: void
 */
-void start_screen(){
+void wait_for_btn(Point write_start){
     int btn;
     int update_counter = 0;
+    int delay = 30;
+
     Image menu_help = {
-        Row, 128, 32, START_SCREEN
+        Row, 128, 8, CONTINUE
     };
-    draw_image(SCREEN, &menu_help, (Point){0, 0});
+    draw_image(SCREEN, &menu_help, write_start);
     update_disp(SCREEN);
 
     while (1){
@@ -722,10 +735,11 @@ void start_screen(){
         btn = getbtns();
         if(inter_flag){
             IFS(0) &= (unsigned int)(~0x100);
-            ++update_counter;
+            if(!btn) update_counter = delay;
+            else ++update_counter;
         }
-        if(update_counter == 10){
-            update_counter = 0;
+        if(update_counter >= delay){
+            if(btn) update_counter = 0;
             if(btn){
                 clear_frame(SCREEN);
                 update_disp(SCREEN);

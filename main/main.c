@@ -72,7 +72,12 @@ int main(void){
         switch (current)
         {
         case Start:{
-            start_screen();
+            Image menu_help = {
+                Row, 128, 32, START_SCREEN_TITLE
+            };
+            draw_image(SCREEN, &menu_help, (Point){0, 0});
+            update_disp(SCREEN);
+            wait_for_btn((Point){0, 24});
             current = Main;
             break;
         }
@@ -105,8 +110,9 @@ int main(void){
         //Options immediately after dying in snake game
         case End_options:{
             Options_button *end_options;
-            Options_menu end_menu;
             int score_pos = top_score(&score_board, current_score);
+            /*check wether score is good enough to be placed on the 
+            scoreboard */
             if(score_pos != -1){
                 end_options = (Options_button[]){
                     (Options_button){Name_input, "SAVE SCORE\n", 0},
@@ -115,13 +121,12 @@ int main(void){
                 };
                 Options_menu end_menu = {
                     end_options,
-                    0, 0, 3, 2
+                    0, 0, 3, 3
                 };
-                write_row(SCREEN, 0, "   GAME OVER   ");
                 Image menu_help = {
                     Row, 128, 8, LOCATOR_MENU_HELP
                 };
-                draw_image(SCREEN, &menu_help, (Point){0, 8});
+                draw_image(SCREEN, &menu_help, (Point){0, 0});
                 current = locator_menu(&end_menu, BTN3_4, SCREEN);
             }
             else{
@@ -142,6 +147,24 @@ int main(void){
             }
             break;
         }
+        //In case you lose against the AI snake in witch case you can't save your score
+        case End_options_lose:{
+                Options_button end_options[] = {
+                    (Options_button){Game, "RETRY\n", 0},
+                    (Options_button){Main, "BACK TO MENU\n", 0}
+                };
+                Options_menu end_menu = {
+                    end_options,
+                    0, 0, 2, 2
+                };
+                write_row(SCREEN, 0, "   GAME OVER   ");
+                Image menu_help = {
+                   Row, 128, 8, LOCATOR_MENU_HELP
+                };
+                draw_image(SCREEN, &menu_help, (Point){0, 8});
+                current = locator_menu(&end_menu, BTN3_4, SCREEN);  
+            break;
+        }
         //Keyboard menu for writing your name to save your scores
         case Name_input:{
             Score score;
@@ -159,7 +182,7 @@ int main(void){
         case Leveld:{ 
             Options_button diffs[] = {
                 (Options_button){None, (char[]){"NO OBSTACLES   "}, 0},
-                (Options_button){Normal, (char[]){"NORMAL         "}, 0},
+                (Options_button){Easy, (char[]){"NORMAL         "}, 0},
                 (Options_button){Hard, (char[]){"HARD           "}, 0}
             };
             Options_menu ob_diff_menu = {

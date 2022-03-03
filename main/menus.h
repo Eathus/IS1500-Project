@@ -14,7 +14,7 @@ typedef enum difficulty{None, Easy, Normal, Hard} difficulty;
 
 //state of the game (witch part of the game user is currently in)
 typedef enum game_state{Quit, Start, Main, Leveld, AId, Score_board, 
-Game, End_options, Name_input, Return_options, Cancel} game_state;
+Game, End_options, End_options_lose, Name_input, Return_options, Cancel} game_state;
 
 //Type of the buttons in a menu deciding what they will do when selected
 typedef enum button_type{Letter, Number, Enter, Caps, Back, Space} button_type; 
@@ -94,4 +94,4 @@ game_state score_board_menu(Sboard const *board, uint8_t *frame);
 game_state diff_menu(difficulty * diff, Options_menu * menu, uint8_t *frame);
 int top_score(Sboard const *board, int score);
 void insert_score(Sboard *board, Score const *score);
-void start_screen();
+void wait_for_btn(Point write_start);

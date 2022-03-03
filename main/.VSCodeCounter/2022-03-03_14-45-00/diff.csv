@@ -1,0 +1,8 @@
+"filename", "language", "C++", "C", "hex", "comment", "blank", "total"
+"/home/edvinnordqvist/Code/School/IS1500-Project/main/data.c", "C", 0, 46, 0, 0, 4, 50
+"/home/edvinnordqvist/Code/School/IS1500-Project/main/data.h", "C++", 1, 0, 0, 0, 0, 1
+"/home/edvinnordqvist/Code/School/IS1500-Project/main/main.c", "C", 0, 2, 0, -1, 0, 1
+"/home/edvinnordqvist/Code/School/IS1500-Project/main/menus.c", "C", 0, 25, 0, 7, 1, 33
+"/home/edvinnordqvist/Code/School/IS1500-Project/main/menus.h", "C++", 1, 0, 0, 0, 0, 1
+"/home/edvinnordqvist/Code/School/IS1500-Project/main/outfile.hex", "hex", 0, 0, 51, 0, 0, 51
+"Total", "-", 2, 73, 51, 6, 5, 137
