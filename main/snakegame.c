@@ -96,7 +96,7 @@ void game_init( void )
 void draw_level(difficulty level){
   switch (level)
   {
-  case Normal:{
+  case Easy:{
     Image obs1 = {
       Row, 5, 12, HANG_OBSTICAL1
     };
