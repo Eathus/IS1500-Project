@@ -1,1 +1,1 @@
-# IS1500-Project
+# uc32-chipkit-snake-game 
